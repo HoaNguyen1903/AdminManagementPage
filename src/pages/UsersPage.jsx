@@ -7,10 +7,12 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    TextField
+    TextField,
+    Tabs,
+    Tab
 } from '@mui/material';
 import DataTable from '../components/DataTable';
-import { userService, userItemService, gameItemService } from '../api/services';
+import { userService, itemService } from '../api/services';
 
 const UsersPage = () => {
     const [users, setUsers] = useState([]);
@@ -18,13 +20,9 @@ const UsersPage = () => {
     const [openInventory, setOpenInventory] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [userItems, setUserItems] = useState([]);
+    const [userBundles, setUserBundles] = useState([]);
     const [itemMap, setItemMap] = useState({});
-
-    const itemTypes = {
-        1: 'Character',
-        2: 'Skin Shard',
-        3: 'Gem'
-    };
+    const [inventoryTab, setInventoryTab] = useState(0);
 
     const [formData, setFormData] = useState({
         email: '',
@@ -40,12 +38,17 @@ const UsersPage = () => {
         { id: 'banned', label: 'Banned Until', minWidth: 150 },
     ];
 
-    const inventoryColumns = [
+    const itemColumns = [
         { id: 'itemId', label: 'Item ID', minWidth: 50 },
         { id: 'itemName', label: 'Name', minWidth: 150 },
-        { id: 'type', label: 'Type', minWidth: 100 },
         { id: 'quantity', label: 'Quantity', minWidth: 100 },
         { id: 'obtainedDate', label: 'Obtained Date', minWidth: 150 },
+    ];
+
+    const bundleColumns = [
+        { id: 'skinAndCharacterBundleId', label: 'Skin Bundle ID', minWidth: 100 },
+        { id: 'gemBundleId', label: 'Gem Bundle ID', minWidth: 100 },
+        { id: 'quantity', label: 'Quantity (Stock)', minWidth: 100 },
     ];
 
     const fetchUsers = async () => {
@@ -57,22 +60,22 @@ const UsersPage = () => {
         }
     };
 
-    const fetchGameItems = async () => {
+    const fetchItems = async () => {
         try {
-            const response = await gameItemService.getAll();
+            const response = await itemService.getAll();
             const map = {};
             response.data.forEach(item => {
-                map[item.itemId] = item;
+                map[item.itemId] = item.itemName;
             });
             setItemMap(map);
         } catch (error) {
-            console.error('Failed to fetch game items', error);
+            console.error('Failed to fetch items', error);
         }
     };
 
     useEffect(() => {
         fetchUsers();
-        fetchGameItems();
+        fetchItems();
     }, []);
 
     const handleCreate = () => {
@@ -95,6 +98,7 @@ const UsersPage = () => {
     const handleDelete = async (user) => {
         if (window.confirm('Are you sure you want to delete this user?')) {
             try {
+                // userService.delete(user.userId) - Assuming delete is still available
                 await userService.delete(user.userId);
                 fetchUsers();
             } catch (error) {
@@ -106,16 +110,12 @@ const UsersPage = () => {
     const handleViewInventory = async (user) => {
         setCurrentUser(user);
         try {
-            const response = await userItemService.getByUserId(user.userId);
-            const items = response.data.map(item => {
-                const itemDetails = itemMap[item.itemId] || {};
-                return {
-                    ...item,
-                    itemName: itemDetails.name || 'Unknown',
-                    type: itemTypes[itemDetails.type] || itemDetails.type || 'Unknown'
-                };
-            });
-            setUserItems(items);
+            const [itemsRes, bundlesRes] = await Promise.all([
+                userService.getUserItems(user.userId),
+                userService.getUserBundles(user.userId)
+            ]);
+            setUserItems(itemsRes.data.map(i => ({ ...i, itemName: itemMap[i.itemId] || `Item #${i.itemId}` })));
+            setUserBundles(bundlesRes.data);
             setOpenInventory(true);
         } catch (error) {
             console.error('Failed to fetch user inventory', error);
@@ -124,14 +124,10 @@ const UsersPage = () => {
 
     const handleSave = async () => {
         try {
-            const data = { ...formData };
-            // Handle optional date field for banned
-            if (!data.banned) data.banned = null;
-
             if (currentUser) {
-                await userService.update(currentUser.userId, data);
+                await userService.update(currentUser.userId, formData);
             } else {
-                await userService.create(data);
+                await userService.create(formData);
             }
             setOpenModal(false);
             fetchUsers();
@@ -141,7 +137,7 @@ const UsersPage = () => {
     };
 
     return (
-        <Box>
+        <Box sx={{ width: '100%' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                 <Typography variant="h4">Users</Typography>
                 <Button variant="contained" onClick={handleCreate}>Create User</Button>
@@ -155,8 +151,7 @@ const UsersPage = () => {
                 searchPlaceholder="Search users..."
             />
 
-            {/* Create/Edit Modal */}
-            <Dialog open={openModal} onClose={() => setOpenModal(false)}>
+            <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>{currentUser ? 'Edit User' : 'Create User'}</DialogTitle>
                 <DialogContent>
                     <TextField
@@ -181,7 +176,7 @@ const UsersPage = () => {
                         fullWidth
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        helperText={currentUser ? "Leave blank to keep current password" : "Required for new users"}
+                        helperText={currentUser ? "Leave blank to keep current" : "Required"}
                     />
                     <TextField
                         margin="dense"
@@ -199,16 +194,30 @@ const UsersPage = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Inventory Modal */}
             <Dialog open={openInventory} onClose={() => setOpenInventory(false)} maxWidth="md" fullWidth>
-                <DialogTitle>User Inventory: {currentUser?.fullName}</DialogTitle>
+                <DialogTitle>Inventory: {currentUser?.fullName}</DialogTitle>
                 <DialogContent>
-                    <DataTable
-                        columns={inventoryColumns}
-                        data={userItems}
-                        disableActions
-                        searchPlaceholder="Search inventory..."
-                    />
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+                        <Tabs value={inventoryTab} onChange={(e, v) => setInventoryTab(v)}>
+                            <Tab label="Items" />
+                            <Tab label="Bundles Stock" />
+                        </Tabs>
+                    </Box>
+                    {inventoryTab === 0 ? (
+                        <DataTable
+                            columns={itemColumns}
+                            data={userItems}
+                            disableActions
+                            searchPlaceholder="Search items..."
+                        />
+                    ) : (
+                        <DataTable
+                            columns={bundleColumns}
+                            data={userBundles}
+                            disableActions
+                            searchPlaceholder="Search bundles..."
+                        />
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenInventory(false)}>Close</Button>

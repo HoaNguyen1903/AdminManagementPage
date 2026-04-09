@@ -12,11 +12,13 @@ import {
     useTheme
 } from '@mui/material';
 import {
-    ViewCarousel as BannersIcon,
-    SportsEsports as GameItemsIcon,
-    Notifications as NotificationsIcon,
+    Dashboard as DashboardIcon,
+    Campaign as AnnouncementsIcon,
+    Person as CharactersIcon,
+    Feedback as FeedbackIcon,
+    Inventory as ItemsIcon,
+    Storefront as ShopIcon,
     ShoppingCart as OrdersIcon,
-    Assessment as ReportsIcon,
     People as UsersIcon,
     ChevronLeft as ChevronLeftIcon,
     ChevronRight as ChevronRightIcon,
@@ -28,11 +30,13 @@ import { useAuth } from '../context/AuthContext';
 const drawerWidth = 240;
 
 const menuItems = [
-    { text: 'Banners', icon: <BannersIcon />, path: '/banners' },
-    { text: 'Game Items', icon: <GameItemsIcon />, path: '/game-items' },
-    { text: 'Notifications', icon: <NotificationsIcon />, path: '/notifications' },
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+    { text: 'Announcements', icon: <AnnouncementsIcon />, path: '/announcements' },
+    { text: 'Characters', icon: <CharactersIcon />, path: '/characters' },
+    { text: 'Feedback', icon: <FeedbackIcon />, path: '/feedback' },
+    { text: 'Items', icon: <ItemsIcon />, path: '/items' },
+    { text: 'Shop', icon: <ShopIcon />, path: '/shop' },
     { text: 'Orders', icon: <OrdersIcon />, path: '/orders' },
-    { text: 'Reports', icon: <ReportsIcon />, path: '/reports' },
     { text: 'Users', icon: <UsersIcon />, path: '/users' },
 ];
 

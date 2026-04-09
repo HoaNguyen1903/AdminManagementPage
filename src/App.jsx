@@ -4,11 +4,12 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ColorModeProvider } from './context/ThemeContext';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
-import BannersPage from './pages/BannersPage';
-import GameItemsPage from './pages/GameItemsPage';
-import NotificationsPage from './pages/NotificationsPage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
+import CharactersPage from './pages/CharactersPage';
+import FeedbackPage from './pages/FeedbackPage';
+import ItemsPage from './pages/ItemsPage';
+import ShopPage from './pages/ShopPage';
 import OrdersPage from './pages/OrdersPage';
-import ReportsPage from './pages/ReportsPage';
 import UsersPage from './pages/UsersPage';
 
 import Layout from './components/Layout';
@@ -37,11 +38,12 @@ const App = () => {
                             }
                         >
                             <Route path="/" element={<HomePage />} />
-                            <Route path="/banners" element={<BannersPage />} />
-                            <Route path="/game-items" element={<GameItemsPage />} />
-                            <Route path="/notifications" element={<NotificationsPage />} />
+                            <Route path="/announcements" element={<AnnouncementsPage />} />
+                            <Route path="/characters" element={<CharactersPage />} />
+                            <Route path="/feedback" element={<FeedbackPage />} />
+                            <Route path="/items" element={<ItemsPage />} />
+                            <Route path="/shop" element={<ShopPage />} />
                             <Route path="/orders" element={<OrdersPage />} />
-                            <Route path="/reports" element={<ReportsPage />} />
                             <Route path="/users" element={<UsersPage />} />
                         </Route>
                     </Routes>

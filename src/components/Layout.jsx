@@ -37,7 +37,7 @@ const Layout = ({ children }) => {
     };
 
     return (
-        <Box sx={{ display: 'flex' }}>
+        <Box sx={{ display: 'flex', width: '100%', minHeight: '100vh' }}>
             <CssBaseline />
             <CustomAppBar position="fixed" open={open}>
                 <Toolbar>

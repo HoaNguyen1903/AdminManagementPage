@@ -7,44 +7,32 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    TextField
+    TextField,
+    MenuItem
 } from '@mui/material';
 import DataTable from '../components/DataTable';
-import { gameItemService } from '../api/services';
+import { itemService } from '../api/services';
 
-const GameItemsPage = () => {
+const ItemsPage = () => {
     const [items, setItems] = useState([]);
     const [openModal, setOpenModal] = useState(false);
     const [currentItem, setCurrentItem] = useState(null);
     const [formData, setFormData] = useState({
-        name: '',
-        price: '',
-        description: '',
-        type: ''
+        itemName: '',
+        itemDescription: '',
+        itemType: 'Character'
     });
-
-    const itemTypes = {
-        1: 'Character',
-        2: 'Skin Shard',
-        3: 'Gem'
-    };
 
     const columns = [
         { id: 'itemId', label: 'ID', minWidth: 50 },
-        { id: 'name', label: 'Name', minWidth: 100 },
-        { id: 'price', label: 'Price', minWidth: 100 },
-        { id: 'description', label: 'Description', minWidth: 200 },
-        { 
-            id: 'type', 
-            label: 'Type', 
-            minWidth: 50,
-            format: (value) => itemTypes[value] || value
-        },
+        { id: 'itemName', label: 'Name', minWidth: 150 },
+        { id: 'itemType', label: 'Type', minWidth: 100 },
+        { id: 'itemDescription', label: 'Description', minWidth: 250 },
     ];
 
     const fetchItems = async () => {
         try {
-            const response = await gameItemService.getAll();
+            const response = await itemService.getAll();
             setItems(response.data);
         } catch (error) {
             console.error('Failed to fetch items', error);
@@ -57,17 +45,16 @@ const GameItemsPage = () => {
 
     const handleCreate = () => {
         setCurrentItem(null);
-        setFormData({ name: '', price: '', description: '', type: '' });
+        setFormData({ itemName: '', itemDescription: '', itemType: 'Character' });
         setOpenModal(true);
     };
 
     const handleEdit = (item) => {
         setCurrentItem(item);
         setFormData({
-            name: item.name,
-            price: item.price,
-            description: item.description,
-            type: item.type
+            itemName: item.itemName,
+            itemDescription: item.itemDescription,
+            itemType: item.itemType
         });
         setOpenModal(true);
     };
@@ -75,7 +62,7 @@ const GameItemsPage = () => {
     const handleDelete = async (item) => {
         if (window.confirm('Are you sure you want to delete this item?')) {
             try {
-                await gameItemService.delete(item.itemId);
+                await itemService.delete(item.itemId);
                 fetchItems();
             } catch (error) {
                 console.error('Failed to delete item', error);
@@ -85,15 +72,10 @@ const GameItemsPage = () => {
 
     const handleSave = async () => {
         try {
-            const data = {
-                ...formData,
-                price: parseFloat(formData.price),
-                type: parseInt(formData.type)
-            };
             if (currentItem) {
-                await gameItemService.update(currentItem.itemId, data);
+                await itemService.update(currentItem.itemId, formData);
             } else {
-                await gameItemService.create(data);
+                await itemService.create(formData);
             }
             setOpenModal(false);
             fetchItems();
@@ -103,9 +85,9 @@ const GameItemsPage = () => {
     };
 
     return (
-        <Box>
+        <Box sx={{ width: '100%' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="h4">Game Items</Typography>
+                <Typography variant="h4">Items</Typography>
                 <Button variant="contained" onClick={handleCreate}>Create Item</Button>
             </Box>
             <DataTable
@@ -113,10 +95,10 @@ const GameItemsPage = () => {
                 data={items}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                searchPlaceholder="Search game items..."
+                searchPlaceholder="Search items..."
             />
 
-            <Dialog open={openModal} onClose={() => setOpenModal(false)}>
+            <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>{currentItem ? 'Edit Item' : 'Create Item'}</DialogTitle>
                 <DialogContent>
                     <TextField
@@ -124,32 +106,30 @@ const GameItemsPage = () => {
                         margin="dense"
                         label="Name"
                         fullWidth
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Price"
-                        type="number"
-                        fullWidth
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                        value={formData.itemName}
+                        onChange={(e) => setFormData({ ...formData, itemName: e.target.value })}
                     />
                     <TextField
                         margin="dense"
                         label="Description"
                         fullWidth
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        multiline
+                        rows={3}
+                        value={formData.itemDescription}
+                        onChange={(e) => setFormData({ ...formData, itemDescription: e.target.value })}
                     />
                     <TextField
+                        select
                         margin="dense"
                         label="Type"
-                        type="number"
                         fullWidth
-                        value={formData.type}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    />
+                        value={formData.itemType}
+                        onChange={(e) => setFormData({ ...formData, itemType: e.target.value })}
+                    >
+                        <MenuItem value="Character">Character</MenuItem>
+                        <MenuItem value="Skin Shard">Skin Shard</MenuItem>
+                        <MenuItem value="Gem">Gem</MenuItem>
+                    </TextField>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenModal(false)}>Cancel</Button>
@@ -160,4 +140,4 @@ const GameItemsPage = () => {
     );
 };
 
-export default GameItemsPage;
+export default ItemsPage;

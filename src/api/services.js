@@ -1,64 +1,87 @@
 import api from './axiosConfig';
 
-// Banners
-export const bannerService = {
-  getAll: () => api.get('/Banner'),
-  getById: (id) => api.get(`/Banner/${id}`),
-  create: (data) => api.post('/Banner', data),
-  update: (id, data) => api.put(`/Banner/${id}`, data),
-  delete: (id) => api.delete(`/Banner/${id}`),
+// Announcements
+export const announcementService = {
+  getAll: (params) => api.get('/Announcement', { params }),
+  getById: (id) => api.get(`/Announcement/${id}`),
+  create: (data) => api.post('/Announcement', data),
+  update: (id, data) => api.put(`/Announcement/${id}`, data),
+  delete: (id) => api.delete(`/Announcement/${id}`),
 };
 
-export const bannerItemService = {
-  getAll: () => api.get('/BannerItem'),
-  getById: (bannerId, itemId) => api.get(`/BannerItem/${bannerId}/${itemId}`),
-  create: (data) => api.post('/BannerItem', data),
-  delete: (bannerId, itemId) => api.delete(`/BannerItem/${bannerId}/${itemId}`),
+// Characters
+export const characterService = {
+  getStats: (params) => api.get('/Character/stats', { params }),
+  getStatById: (id) => api.get(`/Character/stats/${id}`),
+  getPvPs: (params) => api.get('/Character/pvp', { params }),
+  getPvPById: (id) => api.get(`/Character/pvp/${id}`),
+  getPassives: (params) => api.get('/Character/passives', { params }),
+  getSkills: (params) => api.get('/Character/skills', { params }),
+  getAttacks: (params) => api.get('/Character/attacks', { params }),
+  getAbilitiesSet: (tacticId) => api.get(`/Character/abilities/${tacticId}`),
 };
 
-export const gameItemService = {
-  getAll: () => api.get('/Item'),
+// Feedback
+export const feedbackService = {
+  getNotifications: (params) => api.get('/Feedback/notifications', { params }),
+  getReports: (params) => api.get('/Feedback/reports', { params }),
+  getReportById: (id) => api.get(`/Feedback/reports/${id}`),
+};
+
+// Items
+export const itemService = {
+  getAll: (params) => api.get('/Item', { params }),
   getById: (id) => api.get(`/Item/${id}`),
   create: (data) => api.post('/Item', data),
   update: (id, data) => api.put(`/Item/${id}`, data),
   delete: (id) => api.delete(`/Item/${id}`),
 };
 
-export const notificationService = {
-  getAll: () => api.get('/Notification'),
-  getById: (id) => api.get(`/Notification/${id}`),
+// Shop
+export const shopService = {
+  // Gem Bundles
+  getGemBundles: (params) => api.get('/Shop/gem-bundles', { params }),
+  getGemBundleById: (id) => api.get(`/Shop/gem-bundles/${id}`),
+  createGemBundle: (data) => api.post('/Shop/gem-bundles', data),
+  updateGemBundle: (id, data) => api.put(`/Shop/gem-bundles/${id}`, data),
+  deleteGemBundle: (id) => api.delete(`/Shop/gem-bundles/${id}`),
+
+  // Skin and Character Bundles
+  getSkinBundles: (params) => api.get('/Shop/skin-and-character-bundles', { params }),
+  getSkinBundleById: (id) => api.get(`/Shop/skin-and-character-bundles/${id}`),
+  createSkinBundle: (data) => api.post('/Shop/skin-and-character-bundles', data),
+  updateSkinBundle: (id, data) => api.put(`/Shop/skin-and-character-bundles/${id}`, data),
+  deleteSkinBundle: (id) => api.delete(`/Shop/skin-and-character-bundles/${id}`),
+
+  // Bundle Items (Bridge table)
+  getAllBundleItems: (params) => api.get('/Shop/bundle-items', { params }),
+  getItemsByBundleId: (bundleId) => api.get(`/Shop/bundle-items/${bundleId}`),
+  createBundleItem: (data) => api.post('/Shop/bundle-items', data),
+  updateBundleItem: (bundleId, itemId, data) => api.put(`/Shop/bundle-items/${bundleId}/item/${itemId}`, data),
+  deleteBundleItem: (bundleId, itemId) => api.delete(`/Shop/bundle-items/${bundleId}/item/${itemId}`),
+
+  // Orders
+  getOrders: (params) => api.get('/Shop/orders', { params }),
+  getOrderDetails: (orderId, params) => api.get(`/Shop/orders/${orderId}/details`, { params }),
+  getTopUpHistory: (params) => api.get('/Shop/topup-history', { params }),
 };
 
-export const orderService = {
-  getAll: () => api.get('/Order'),
-  getById: (id) => api.get(`/Order/${id}`),
-};
-
-export const orderDetailService = {
-  getAll: () => api.get('/OrderDetail'),
-  getById: (orderId, productId) => api.get(`/OrderDetail/${orderId}/${productId}`),
-};
-
-export const reportService = {
-  getAll: () => api.get('/Report'),
-  getById: (id) => api.get(`/Report/${id}`),
-  approve: (id) => api.post(`/Report/${id}/approve`),
-};
-
+// Users
 export const userService = {
-  getAll: () => api.get('/User'),
+  getAll: (params) => api.get('/User', { params }),
   getById: (id) => api.get(`/User/${id}`),
-  create: (data) => api.post('/User', data),
-  update: (id, data) => api.put(`/User/${id}`, data),
-  delete: (id) => api.delete(`/User/${id}`),
-};
+  
+  // User Items
+  getAllUserItems: (params) => api.get('/User/items', { params }),
+  getUserItems: (userId, params) => api.get(`/User/${userId}/items`, { params }),
+  createUserItem: (data) => api.post('/User/items', data),
+  updateUserItem: (userId, itemId, data) => api.put(`/User/${userId}/items/${itemId}`, data),
+  deleteUserItem: (userId, itemId) => api.delete(`/User/${userId}/items/${itemId}`),
 
-export const userItemService = {
-  getAll: () => api.get('/UserItem'),
-  getByUserId: (userId) => api.get(`/UserItem/user/${userId}`),
-  getById: (id) => api.get(`/UserItem/${id}`),
-  create: (data) => api.post('/UserItem', data),
-  update: (id, data) => api.put(`/UserItem/${id}`, data),
-  delete: (id) => api.delete(`/UserItem/${id}`),
+  // User Bundles
+  getAllUserBundles: (params) => api.get('/User/bundles', { params }),
+  getUserBundles: (userId, params) => api.get(`/User/${userId}/bundles`, { params }),
+  createUserBundle: (data) => api.post('/User/bundles', data),
+  updateUserBundle: (userId, skinBundleId, gemBundleId, data) => api.put(`/User/${userId}/bundles/skin/${skinBundleId}/gem/${gemBundleId}`, data),
+  deleteUserBundle: (userId, skinBundleId, gemBundleId) => api.delete(`/User/${userId}/bundles/skin/${skinBundleId}/gem/${gemBundleId}`),
 };
-
