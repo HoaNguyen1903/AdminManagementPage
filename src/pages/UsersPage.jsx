@@ -12,7 +12,7 @@ import {
     Tab
 } from '@mui/material';
 import DataTable from '../components/DataTable';
-import { userService, itemService } from '../api/services';
+import { userService, itemService, userItemService } from '../api/services';
 
 const UsersPage = () => {
     const [users, setUsers] = useState([]);
@@ -26,7 +26,8 @@ const UsersPage = () => {
 
     const [formData, setFormData] = useState({
         email: '',
-        fullName: '',
+        firstName: '',
+        lastName: '',
         password: '',
         banned: ''
     });
@@ -34,8 +35,9 @@ const UsersPage = () => {
     const columns = [
         { id: 'userId', label: 'ID', minWidth: 50 },
         { id: 'email', label: 'Email', minWidth: 150 },
-        { id: 'fullName', label: 'Full Name', minWidth: 150 },
-        { id: 'banned', label: 'Banned Until', minWidth: 150 },
+        { id: 'firstName', label: 'First Name', minWidth: 100 },
+        { id: 'lastName', label: 'Last Name', minWidth: 100 },
+        { id: 'bannedUntil', label: 'Banned Status', minWidth: 150, format: (value) => value ? new Date(value).toLocaleString() : 'Not Banned' },
     ];
 
     const itemColumns = [
@@ -80,30 +82,44 @@ const UsersPage = () => {
 
     const handleCreate = () => {
         setCurrentUser(null);
-        setFormData({ email: '', fullName: '', password: '', banned: '' });
+        setFormData({ email: '', firstName: '', lastName: '', password: '', banned: '' });
         setOpenModal(true);
     };
 
     const handleEdit = (user) => {
         setCurrentUser(user);
+        // Format date for datetime-local input (yyyy-MM-ddThh:mm)
+        let bannedValue = '';
+        if (user.bannedUntil && typeof user.bannedUntil === 'string') {
+            try {
+                bannedValue = new Date(user.bannedUntil).toISOString().slice(0, 16);
+            } catch (e) {
+                console.error('Failed to parse ban date', e);
+            }
+        }
+        
         setFormData({
             email: user.email,
-            fullName: user.fullName,
+            firstName: user.firstName,
+            lastName: user.lastName,
             password: '',
-            banned: user.banned || ''
+            banned: bannedValue
         });
         setOpenModal(true);
     };
 
     const handleDelete = async (user) => {
-        if (window.confirm('Are you sure you want to delete this user?')) {
-            try {
-                // userService.delete(user.userId) - Assuming delete is still available
-                await userService.delete(user.userId);
-                fetchUsers();
-            } catch (error) {
-                console.error('Failed to delete user', error);
-            }
+        const reason = window.prompt('Enter ban reason (required):', 'Violation of terms');
+        if (!reason) return;
+        const until = window.prompt('Ban until (YYYY-MM-DD or leave blank for indefinite):', '');
+        try {
+            await userService.ban(user.userId, {
+                banReason: reason,
+                bannedUntil: until ? new Date(until).toISOString() : null
+            });
+            fetchUsers();
+        } catch (error) {
+            console.error('Failed to ban user', error);
         }
     };
 
@@ -111,7 +127,7 @@ const UsersPage = () => {
         setCurrentUser(user);
         try {
             const [itemsRes, bundlesRes] = await Promise.all([
-                userService.getUserItems(user.userId),
+                userItemService.getByUserId(user.userId),
                 userService.getUserBundles(user.userId)
             ]);
             setUserItems(itemsRes.data.map(i => ({ ...i, itemName: itemMap[i.itemId] || `Item #${i.itemId}` })));
@@ -125,9 +141,26 @@ const UsersPage = () => {
     const handleSave = async () => {
         try {
             if (currentUser) {
-                await userService.update(currentUser.userId, formData);
+                // Update: includes all fields
+                const bannedUntilValue = formData.banned ? new Date(formData.banned).toISOString() : null;
+                const dataToSave = {
+                    email: formData.email,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    password: formData.password, // Added password to update
+                    bannedUntil: bannedUntilValue,
+                    banned: bannedUntilValue ? new Date(bannedUntilValue) > new Date() : false
+                };
+                await userService.update(currentUser.userId, dataToSave);
             } else {
-                await userService.create(formData);
+                // Create: only base fields, banned fields removed from CreateUserDto
+                const dataToSave = {
+                    email: formData.email,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    password: formData.password
+                };
+                await userService.create(dataToSave);
             }
             setOpenModal(false);
             fetchUsers();
@@ -164,10 +197,17 @@ const UsersPage = () => {
                     />
                     <TextField
                         margin="dense"
-                        label="Full Name"
+                        label="First Name"
                         fullWidth
-                        value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        value={formData.firstName}
+                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Last Name"
+                        fullWidth
+                        value={formData.lastName}
+                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                     />
                     <TextField
                         margin="dense"
@@ -178,15 +218,17 @@ const UsersPage = () => {
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         helperText={currentUser ? "Leave blank to keep current" : "Required"}
                     />
-                    <TextField
-                        margin="dense"
-                        label="Banned Until"
-                        type="datetime-local"
-                        fullWidth
-                        InputLabelProps={{ shrink: true }}
-                        value={formData.banned}
-                        onChange={(e) => setFormData({ ...formData, banned: e.target.value })}
-                    />
+                    {currentUser && (
+                        <TextField
+                            margin="dense"
+                            label="Banned Until"
+                            type="datetime-local"
+                            fullWidth
+                            InputLabelProps={{ shrink: true }}
+                            value={formData.banned}
+                            onChange={(e) => setFormData({ ...formData, banned: e.target.value })}
+                        />
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenModal(false)}>Cancel</Button>
@@ -195,7 +237,7 @@ const UsersPage = () => {
             </Dialog>
 
             <Dialog open={openInventory} onClose={() => setOpenInventory(false)} maxWidth="md" fullWidth>
-                <DialogTitle>Inventory: {currentUser?.fullName}</DialogTitle>
+                <DialogTitle>Inventory: {currentUser?.firstName} {currentUser?.lastName}</DialogTitle>
                 <DialogContent>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                         <Tabs value={inventoryTab} onChange={(e, v) => setInventoryTab(v)}>

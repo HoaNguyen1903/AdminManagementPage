@@ -85,6 +85,8 @@ const DataTable = ({
                     size="small"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    autoComplete="new-password"
+                    name={`search-${Math.random().toString(36).substring(7)}`}
                 />
             </Box>
             <TableContainer>
@@ -122,9 +124,11 @@ const DataTable = ({
                                         const value = row[column.id];
                                         return (
                                             <TableCell key={column.id} align={column.align}>
-                                                {column.format
-                                                    ? column.format(value)
-                                                    : value}
+                                                {column.render 
+                                                    ? column.render(row) 
+                                                    : column.format
+                                                        ? column.format(value)
+                                                        : value}
                                             </TableCell>
                                         );
                                     })}

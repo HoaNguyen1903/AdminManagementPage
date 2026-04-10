@@ -26,6 +26,9 @@ export const feedbackService = {
   getNotifications: (params) => api.get('/Feedback/notifications', { params }),
   getReports: (params) => api.get('/Feedback/reports', { params }),
   getReportById: (id) => api.get(`/Feedback/reports/${id}`),
+  markRead: (id) => api.post(`/Feedback/notifications/${id}/read`),
+  markUnread: (id) => api.post(`/Feedback/notifications/${id}/unread`),
+  approveReport: (id) => api.post(`/Feedback/reports/${id}/approve`),
 };
 
 // Items
@@ -70,18 +73,28 @@ export const shopService = {
 export const userService = {
   getAll: (params) => api.get('/User', { params }),
   getById: (id) => api.get(`/User/${id}`),
+  create: (data) => api.post('/User', data),
+  update: (id, data) => api.put(`/User/${id}`, data),
+  ban: (id, data) => api.delete(`/User/${id}`, { data }),
+  getBanLogs: (userId, params) => api.get(`/User/${userId}/ban-logs`, { params }),
+  getAllBanLogs: (params) => api.get('/User/ban-logs', { params }),
+  createBanLog: (data) => api.post('/User/ban-logs', data),
+  updateBanLog: (id, data) => api.put(`/User/ban-logs/${id}`, data),
+  deleteBanLog: (id) => api.delete(`/User/ban-logs/${id}`),
   
-  // User Items
-  getAllUserItems: (params) => api.get('/User/items', { params }),
-  getUserItems: (userId, params) => api.get(`/User/${userId}/items`, { params }),
-  createUserItem: (data) => api.post('/User/items', data),
-  updateUserItem: (userId, itemId, data) => api.put(`/User/${userId}/items/${itemId}`, data),
-  deleteUserItem: (userId, itemId) => api.delete(`/User/${userId}/items/${itemId}`),
-
   // User Bundles
   getAllUserBundles: (params) => api.get('/User/bundles', { params }),
   getUserBundles: (userId, params) => api.get(`/User/${userId}/bundles`, { params }),
   createUserBundle: (data) => api.post('/User/bundles', data),
   updateUserBundle: (userId, skinBundleId, gemBundleId, data) => api.put(`/User/${userId}/bundles/skin/${skinBundleId}/gem/${gemBundleId}`, data),
   deleteUserBundle: (userId, skinBundleId, gemBundleId) => api.delete(`/User/${userId}/bundles/skin/${skinBundleId}/gem/${gemBundleId}`),
+};
+
+// User Items
+export const userItemService = {
+  getAll: (params) => api.get('/UserItem', { params }),
+  getByUserId: (userId, params) => api.get(`/UserItem/${userId}`, { params }),
+  create: (data) => api.post('/UserItem', data),
+  update: (userId, itemId, data) => api.put(`/UserItem/${userId}/items/${itemId}`, data),
+  delete: (userId, itemId) => api.delete(`/UserItem/${userId}/items/${itemId}`),
 };
