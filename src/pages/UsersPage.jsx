@@ -9,7 +9,8 @@ import {
     DialogActions,
     TextField,
     Tabs,
-    Tab
+    Tab,
+    Alert
 } from '@mui/material';
 import DataTable from '../components/DataTable';
 import { userService, itemService, userItemService } from '../api/services';
@@ -23,6 +24,7 @@ const UsersPage = () => {
     const [userBundles, setUserBundles] = useState([]);
     const [itemMap, setItemMap] = useState({});
     const [inventoryTab, setInventoryTab] = useState(0);
+    const [error, setError] = useState('');
 
     const [formData, setFormData] = useState({
         email: '',
@@ -83,11 +85,13 @@ const UsersPage = () => {
     const handleCreate = () => {
         setCurrentUser(null);
         setFormData({ email: '', firstName: '', lastName: '', password: '', banned: '' });
+        setError('');
         setOpenModal(true);
     };
 
     const handleEdit = (user) => {
         setCurrentUser(user);
+        setError('');
         // Format date for datetime-local input (yyyy-MM-ddThh:mm)
         let bannedValue = '';
         if (user.bannedUntil && typeof user.bannedUntil === 'string') {
@@ -139,6 +143,7 @@ const UsersPage = () => {
     };
 
     const handleSave = async () => {
+        setError('');
         try {
             if (currentUser) {
                 // Update: includes all fields
@@ -165,7 +170,12 @@ const UsersPage = () => {
             setOpenModal(false);
             fetchUsers();
         } catch (error) {
-            console.error('Failed to save user', error);
+            if (error.response && error.response.status === 409) {
+                setError('Email already exists in the database.');
+            } else {
+                console.error('Failed to save user', error);
+                setError('Failed to save user. Please try again.');
+            }
         }
     };
 
@@ -187,6 +197,11 @@ const UsersPage = () => {
             <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>{currentUser ? 'Edit User' : 'Create User'}</DialogTitle>
                 <DialogContent>
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 2, mt: 1 }}>
+                            {error}
+                        </Alert>
+                    )}
                     <TextField
                         autoFocus
                         margin="dense"
@@ -194,6 +209,7 @@ const UsersPage = () => {
                         fullWidth
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        error={error.includes('Email')}
                     />
                     <TextField
                         margin="dense"
