@@ -10,7 +10,8 @@ import {
     TextField,
     Tabs,
     Tab,
-    Alert
+    Alert,
+    Avatar
 } from '@mui/material';
 import DataTable from '../components/DataTable';
 import { userService, itemService, userItemService } from '../api/services';
@@ -36,6 +37,20 @@ const UsersPage = () => {
 
     const columns = [
         { id: 'userId', label: 'ID', minWidth: 50 },
+        { 
+            id: 'avatarUrl', 
+            label: 'Avatar', 
+            minWidth: 70,
+            render: (row) => (
+                <Avatar 
+                    src={row.avatarUrl} 
+                    alt={row.firstName}
+                    sx={{ width: 32, height: 32 }}
+                >
+                    {row.firstName?.charAt(0).toUpperCase()}
+                </Avatar>
+            )
+        },
         { id: 'email', label: 'Email', minWidth: 150 },
         { id: 'firstName', label: 'First Name', minWidth: 100 },
         { id: 'lastName', label: 'Last Name', minWidth: 100 },

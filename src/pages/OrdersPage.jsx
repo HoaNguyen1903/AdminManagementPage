@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
     Box,
     Typography,
@@ -9,7 +9,8 @@ import {
     Button,
     Tabs,
     Tab,
-    CircularProgress
+    CircularProgress,
+    Chip
 } from '@mui/material';
 import DataTable from '../components/DataTable';
 import { shopService, userService } from '../api/services';
@@ -18,7 +19,9 @@ const OrdersPage = () => {
     const [tabValue, setTabValue] = useState(0);
     const [orders, setOrders] = useState([]);
     const [topUpHistory, setTopUpHistory] = useState([]);
-    const [userMap, setUserMap] = useState({});
+    const [users, setUsers] = useState([]);
+    const [gemBundles, setGemBundles] = useState([]);
+    const [skinBundles, setSkinBundles] = useState([]);
     const [openDetails, setOpenDetails] = useState(false);
     const [currentOrder, setCurrentOrder] = useState(null);
     const [orderDetails, setOrderDetails] = useState([]);
@@ -28,17 +31,63 @@ const OrdersPage = () => {
         setTabValue(newValue);
     };
 
+    // Create lookup maps for names
+    const userMap = useMemo(() => {
+        const map = {};
+        users.forEach(u => {
+            map[u.userId] = `${u.firstName} ${u.lastName}`;
+        });
+        return map;
+    }, [users]);
+
+    const gemBundleMap = useMemo(() => {
+        const map = {};
+        gemBundles.forEach(b => {
+            map[b.gemBundleId] = b.bundleName;
+        });
+        return map;
+    }, [gemBundles]);
+
+    const skinBundleMap = useMemo(() => {
+        const map = {};
+        skinBundles.forEach(b => {
+            map[b.skinAndCharacterBundleId] = b.bundleName;
+        });
+        return map;
+    }, [skinBundles]);
+
     const orderColumns = [
         { id: 'shopOrderId', label: 'Order ID', minWidth: 50 },
         { id: 'userId', label: 'User ID', minWidth: 50 },
-        { id: 'userName', label: 'User Name', minWidth: 150 },
+        { 
+            id: 'userName', 
+            label: 'User Name', 
+            minWidth: 150,
+            render: (row) => userMap[row.userId] || 'Unknown'
+        },
         { id: 'totalAmount', label: 'Total Amount', minWidth: 100 },
         { id: 'orderDate', label: 'Date', minWidth: 150 },
     ];
 
     const detailColumns = [
-        { id: 'itemId', label: 'Item ID', minWidth: 50 },
-        { id: 'skinAndCharacterBundleId', label: 'Bundle ID', minWidth: 100 },
+        { id: 'shopOrderDetailId', label: 'Detail ID', minWidth: 50 },
+        { 
+            id: 'skinAndCharacterBundleId', 
+            label: 'Bundle', 
+            minWidth: 150,
+            render: (row) => {
+                const name = skinBundleMap[row.skinAndCharacterBundleId] || 'Unknown Bundle';
+                return (
+                    <Chip 
+                        label={name} 
+                        size="small" 
+                        variant="outlined"
+                        color="secondary"
+                    />
+                );
+            }
+        },
+        { id: 'itemId', label: 'Item ID', minWidth: 80 },
         { id: 'quantity', label: 'Quantity', minWidth: 50 },
         { id: 'unitPrice', label: 'Unit Price', minWidth: 100 },
     ];
@@ -46,8 +95,29 @@ const OrdersPage = () => {
     const topUpColumns = [
         { id: 'topUpId', label: 'ID', minWidth: 50 },
         { id: 'userId', label: 'User ID', minWidth: 50 },
-        { id: 'userName', label: 'User Name', minWidth: 150 },
-        { id: 'gemsAmount', label: 'Gems', minWidth: 100 },
+        { 
+            id: 'userName', 
+            label: 'User Name', 
+            minWidth: 150,
+            render: (row) => userMap[row.userId] || 'Unknown'
+        },
+        { 
+            id: 'gemBundleId', 
+            label: 'Bundle', 
+            minWidth: 150,
+            render: (row) => {
+                const name = gemBundleMap[row.gemBundleId] || 'Unknown Bundle';
+                return (
+                    <Chip 
+                        label={name} 
+                        size="small" 
+                        variant="outlined"
+                        color="primary"
+                    />
+                );
+            }
+        },
+        { id: 'gemsAmount', label: 'Gems', minWidth: 80 },
         { id: 'realMoneyAmount', label: 'Amount', minWidth: 100 },
         { id: 'currencyCode', label: 'Currency', minWidth: 80 },
         { id: 'status', label: 'Status', minWidth: 100 },
@@ -57,19 +127,21 @@ const OrdersPage = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const usersRes = await userService.getAll();
-            const map = {};
-            usersRes.data.forEach(user => {
-                map[user.userId] = user.fullName;
-            });
-            setUserMap(map);
+            const [usersRes, gemRes, skinRes] = await Promise.all([
+                userService.getAll(),
+                shopService.getGemBundles(),
+                shopService.getSkinBundles()
+            ]);
+            setUsers(usersRes.data || []);
+            setGemBundles(gemRes.data || []);
+            setSkinBundles(skinRes.data || []);
 
             if (tabValue === 0) {
                 const res = await shopService.getOrders();
-                setOrders(res.data.map(o => ({ ...o, userName: map[o.userId] || 'Unknown' })));
+                setOrders(res.data || []);
             } else {
                 const res = await shopService.getTopUpHistory();
-                setTopUpHistory(res.data.map(o => ({ ...o, userName: map[o.userId] || 'Unknown' })));
+                setTopUpHistory(res.data || []);
             }
         } catch (error) {
             console.error('Failed to fetch orders/history', error);
@@ -86,7 +158,7 @@ const OrdersPage = () => {
         setCurrentOrder(order);
         try {
             const res = await shopService.getOrderDetails(order.shopOrderId);
-            setOrderDetails(res.data);
+            setOrderDetails(res.data || []);
             setOpenDetails(true);
         } catch (error) {
             console.error('Failed to fetch order details', error);
@@ -122,9 +194,9 @@ const OrdersPage = () => {
                 <DialogContent>
                     {currentOrder && (
                         <Box sx={{ mb: 2 }}>
-                            <Typography><strong>User:</strong> {currentOrder.userName} (ID: {currentOrder.userId})</Typography>
+                            <Typography><strong>User:</strong> {userMap[currentOrder.userId] || 'Unknown'} (ID: {currentOrder.userId})</Typography>
                             <Typography><strong>Date:</strong> {currentOrder.orderDate}</Typography>
-                            <Typography><strong>Total Amount:</strong> {currentOrder.totalAmount}</Typography>
+                            <Typography><strong>Total Amount:</strong> ${currentOrder.totalAmount}</Typography>
                         </Box>
                     )}
                     <DataTable

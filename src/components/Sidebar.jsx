@@ -21,8 +21,8 @@ import {
     ShoppingCart as OrdersIcon,
     People as UsersIcon,
     ChevronLeft as ChevronLeftIcon,
-    ChevronRight as ChevronRightIcon,
-    Logout as LogoutIcon
+    ChevronRight as ChevronRightIcon
+    // Logout as LogoutIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -44,7 +44,7 @@ const Sidebar = ({ open, toggleDrawer }) => {
     const theme = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
-    const { logout } = useAuth();
+    // const { logout } = useAuth();
 
     return (
         <Drawer
@@ -108,7 +108,7 @@ const Sidebar = ({ open, toggleDrawer }) => {
                     </ListItem>
                 ))}
             </List>
-            <Divider />
+            {/* <Divider />
             <List>
                 <ListItem disablePadding sx={{ display: 'block' }}>
                     <ListItemButton
@@ -131,7 +131,7 @@ const Sidebar = ({ open, toggleDrawer }) => {
                         <ListItemText primary="Logout" sx={{ opacity: open ? 1 : 0 }} />
                     </ListItemButton>
                 </ListItem>
-            </List>
+            </List> */}
         </Drawer>
     );
 };

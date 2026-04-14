@@ -98,3 +98,21 @@ export const userItemService = {
   update: (userId, itemId, data) => api.put(`/UserItem/${userId}/items/${itemId}`, data),
   delete: (userId, itemId) => api.delete(`/UserItem/${userId}/items/${itemId}`),
 };
+
+// Staff
+export const staffService = {
+  getProfile: () => api.get('/Staff/profile'),
+  updateProfile: (data) => api.put('/Staff/profile', data),
+  uploadAvatar: (formData) => api.post('/Staff/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+};
+
+// Dashboard & Analytics
+export const dashboardService = {
+  getRevenue: (params) => api.get('/Dashboard/revenue', { params }),
+  getBundleRanking: (params) => api.get('/Dashboard/bundle-ranking', { params }),
+  getPlayerStats: (params) => api.get('/Dashboard/player-stats', { params }),
+  getPlayerHistory: (params) => api.get('/Dashboard/player-history', { params }),
+  getCurrentStats: () => api.get('/Dashboard/current-stats'),
+};

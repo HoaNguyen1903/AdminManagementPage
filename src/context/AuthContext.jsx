@@ -35,7 +35,11 @@ export const AuthProvider = ({ children }) => {
             } else if (userData) {
                 setUser(JSON.parse(userData));
             } else {
-                const inferredUser = { email: payload.email || payload.sub || '', role: payload.role || payload.roles || null };
+                const inferredUser = { 
+                    email: payload.email || payload.sub || '', 
+                    role: payload.role || payload.roles || null,
+                    avatarUrl: payload.avatarUrl || null
+                };
                 setUser(inferredUser);
                 localStorage.setItem('user', JSON.stringify(inferredUser));
             }
@@ -47,7 +51,11 @@ export const AuthProvider = ({ children }) => {
         const t = data?.token || data?.accessToken || '';
         setToken(t);
         localStorage.setItem('token', t);
-        const u = data?.user || (data?.email ? { email: data.email, role: data.role } : (parseJwt(t) || null));
+        const u = data?.user || (data?.email ? { 
+            email: data.email, 
+            role: data.role,
+            avatarUrl: data.avatarUrl 
+        } : (parseJwt(t) || null));
         if (u) {
             localStorage.setItem('user', JSON.stringify(u));
             setUser(u);
@@ -61,8 +69,14 @@ export const AuthProvider = ({ children }) => {
         setToken(null);
     };
 
+    const updateUserData = (newData) => {
+        const updatedUser = { ...user, ...newData };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, token, login, logout, loading, updateUserData }}>
             {!loading && children}
         </AuthContext.Provider>
     );
