@@ -1,16 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, Tabs, Tab, CircularProgress, Button, IconButton } from '@mui/material';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Box, Typography, Tabs, Tab, CircularProgress, Button, IconButton, Chip } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import ReportActionDialog from '../components/ReportActionDialog';
 import DataTable from '../components/DataTable';
-import { feedbackService } from '../api/services';
+import { feedbackService, userService } from '../api/services';
 
 const FeedbackPage = () => {
     const [tabValue, setTabValue] = useState(0);
     const [data, setData] = useState([]);
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [openReportActionDialog, setOpenReportActionDialog] = useState(false);
     const [selectedReport, setSelectedReport] = useState(null);
+
+    const userMap = useMemo(() => {
+        const map = {};
+        users.forEach(u => {
+            map[u.userId] = `${u.firstName} ${u.lastName}`;
+        });
+        return map;
+    }, [users]);
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
@@ -48,8 +57,32 @@ const FeedbackPage = () => {
         ],
         1: [
             { id: 'reportId', label: 'ID', minWidth: 50 },
-            { id: 'senderId', label: 'Sender ID', minWidth: 100 },
-            { id: 'accusedId', label: 'Accused ID', minWidth: 100 },
+            { 
+                id: 'senderId', 
+                label: 'Sender', 
+                minWidth: 150,
+                render: (row) => (
+                    <Chip 
+                        label={userMap[row.senderId] || 'Unknown'} 
+                        size="small" 
+                        variant="outlined"
+                        color="primary"
+                    />
+                )
+            },
+            { 
+                id: 'accusedId', 
+                label: 'Accused', 
+                minWidth: 150,
+                render: (row) => (
+                    <Chip 
+                        label={userMap[row.accusedId] || 'Unknown'} 
+                        size="small" 
+                        variant="outlined"
+                        color="error"
+                    />
+                )
+            },
             { id: 'reason', label: 'Reason', minWidth: 200 },
             { id: 'sendDate', label: 'Date', minWidth: 150 },
             { id: 'approved', label: 'Approved', minWidth: 100, format: (v) => v ? 'Yes' : 'No' },
@@ -81,10 +114,12 @@ const FeedbackPage = () => {
     const fetchData = async (tab) => {
         setLoading(true);
         try {
-            let res;
-            if (tab === 0) res = await feedbackService.getNotifications();
-            else res = await feedbackService.getReports();
-            setData(res.data);
+            const [feedbackRes, usersRes] = await Promise.all([
+                tab === 0 ? feedbackService.getNotifications() : feedbackService.getReports(),
+                userService.getAll()
+            ]);
+            setData(feedbackRes.data);
+            setUsers(usersRes.data || []);
         } catch (error) {
             console.error('Failed to fetch feedback data', error);
         } finally {
