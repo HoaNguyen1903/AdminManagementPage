@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
     Box,
     Button,
@@ -11,10 +11,11 @@ import {
     Tabs,
     Tab,
     Alert,
-    Avatar
+    Avatar,
+    Chip
 } from '@mui/material';
 import DataTable from '../components/DataTable';
-import { userService, itemService, userItemService } from '../api/services';
+import { userService, itemService, userItemService, shopService } from '../api/services';
 
 const UsersPage = () => {
     const [users, setUsers] = useState([]);
@@ -23,16 +24,36 @@ const UsersPage = () => {
     const [currentUser, setCurrentUser] = useState(null);
     const [userItems, setUserItems] = useState([]);
     const [userBundles, setUserBundles] = useState([]);
+    const [gemBundles, setGemBundles] = useState([]);
+    const [skinBundles, setSkinBundles] = useState([]);
     const [itemMap, setItemMap] = useState({});
     const [inventoryTab, setInventoryTab] = useState(0);
     const [error, setError] = useState('');
 
+    const gemBundleMap = useMemo(() => {
+        const map = {};
+        gemBundles.forEach(b => {
+            map[b.gemBundleId] = b.bundleName;
+        });
+        return map;
+    }, [gemBundles]);
+
+    const skinBundleMap = useMemo(() => {
+        const map = {};
+        skinBundles.forEach(b => {
+            map[b.skinAndCharacterBundleId] = b.bundleName;
+        });
+        return map;
+    }, [skinBundles]);
+
     const [formData, setFormData] = useState({
         email: '',
+        userName: '',
         firstName: '',
         lastName: '',
         password: '',
-        banned: ''
+        banned: '',
+        avatarUrl: ''
     });
 
     const columns = [
@@ -51,10 +72,35 @@ const UsersPage = () => {
                 </Avatar>
             )
         },
+        { id: 'userName', label: 'Username', minWidth: 120 },
         { id: 'email', label: 'Email', minWidth: 150 },
         { id: 'firstName', label: 'First Name', minWidth: 100 },
         { id: 'lastName', label: 'Last Name', minWidth: 100 },
-        { id: 'bannedUntil', label: 'Banned Status', minWidth: 150, format: (value) => value ? new Date(value).toLocaleString() : 'Not Banned' },
+        { 
+            id: 'lastOnline', 
+            label: 'Status', 
+            minWidth: 120,
+            render: (row) => {
+                const isOnline = row.lastOnline && (new Date() - new Date(row.lastOnline)) < 60000;
+                return (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Box 
+                            sx={{ 
+                                width: 8, 
+                                height: 8, 
+                                borderRadius: '50%', 
+                                bgcolor: isOnline ? 'success.main' : 'text.disabled',
+                                mr: 1
+                            }} 
+                        />
+                        <Typography variant="body2">
+                            {isOnline ? 'Online' : (row.lastOnline ? new Date(row.lastOnline).toLocaleDateString() : 'Never')}
+                        </Typography>
+                    </Box>
+                );
+            }
+        },
+        { id: 'bannedUntil', label: 'Banned Until', minWidth: 150, format: (value) => value ? new Date(value).toLocaleString() : 'Not Banned' },
     ];
 
     const itemColumns = [
@@ -65,8 +111,22 @@ const UsersPage = () => {
     ];
 
     const bundleColumns = [
-        { id: 'skinAndCharacterBundleId', label: 'Skin Bundle ID', minWidth: 100 },
-        { id: 'gemBundleId', label: 'Gem Bundle ID', minWidth: 100 },
+        { 
+            id: 'bundleName', 
+            label: 'Bundle', 
+            minWidth: 200,
+            render: (row) => {
+                const name = row.gemBundleId ? gemBundleMap[row.gemBundleId] : skinBundleMap[row.skinAndCharacterBundleId];
+                return (
+                    <Chip 
+                        label={name || 'Unknown Bundle'} 
+                        size="small" 
+                        variant="outlined"
+                        color={row.gemBundleId ? "primary" : "secondary"}
+                    />
+                );
+            }
+        },
         { id: 'quantity', label: 'Quantity (Stock)', minWidth: 100 },
     ];
 
@@ -95,11 +155,22 @@ const UsersPage = () => {
     useEffect(() => {
         fetchUsers();
         fetchItems();
+        // Fetch bundles for mapping
+        shopService.getGemBundles().then(res => setGemBundles(res.data || []));
+        shopService.getSkinBundles().then(res => setSkinBundles(res.data || []));
     }, []);
 
     const handleCreate = () => {
         setCurrentUser(null);
-        setFormData({ email: '', firstName: '', lastName: '', password: '', banned: '' });
+        setFormData({ 
+            email: '', 
+            userName: '', 
+            firstName: '', 
+            lastName: '', 
+            password: '', 
+            banned: '',
+            avatarUrl: ''
+        });
         setError('');
         setOpenModal(true);
     };
@@ -119,10 +190,12 @@ const UsersPage = () => {
         
         setFormData({
             email: user.email,
+            userName: user.userName || '',
             firstName: user.firstName,
             lastName: user.lastName,
             password: '',
-            banned: bannedValue
+            banned: bannedValue,
+            avatarUrl: user.avatarUrl || ''
         });
         setOpenModal(true);
     };
@@ -165,17 +238,20 @@ const UsersPage = () => {
                 const bannedUntilValue = formData.banned ? new Date(formData.banned).toISOString() : null;
                 const dataToSave = {
                     email: formData.email,
+                    userName: formData.userName,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
-                    password: formData.password, // Added password to update
+                    password: formData.password, 
                     bannedUntil: bannedUntilValue,
-                    banned: bannedUntilValue ? new Date(bannedUntilValue) > new Date() : false
+                    banned: bannedUntilValue ? new Date(bannedUntilValue) > new Date() : false,
+                    avatarUrl: formData.avatarUrl
                 };
                 await userService.update(currentUser.userId, dataToSave);
             } else {
                 // Create: only base fields, banned fields removed from CreateUserDto
                 const dataToSave = {
                     email: formData.email,
+                    userName: formData.userName,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
                     password: formData.password
@@ -228,6 +304,13 @@ const UsersPage = () => {
                     />
                     <TextField
                         margin="dense"
+                        label="Username"
+                        fullWidth
+                        value={formData.userName}
+                        onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+                    />
+                    <TextField
+                        margin="dense"
                         label="First Name"
                         fullWidth
                         value={formData.firstName}
@@ -239,6 +322,14 @@ const UsersPage = () => {
                         fullWidth
                         value={formData.lastName}
                         onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Avatar URL"
+                        fullWidth
+                        value={formData.avatarUrl}
+                        onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
+                        helperText="Link to image"
                     />
                     <TextField
                         margin="dense"

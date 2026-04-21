@@ -55,27 +55,30 @@ export const shopService = {
   createSkinBundle: (data) => api.post('/Shop/skin-and-character-bundles', data),
   updateSkinBundle: (id, data) => api.put(`/Shop/skin-and-character-bundles/${id}`, data),
   deleteSkinBundle: (id) => api.delete(`/Shop/skin-and-character-bundles/${id}`),
+};
 
-  // Bundle Items (Bridge table)
-  getAllBundleItems: (params) => api.get('/Shop/bundle-items', { params }),
-  getItemsByBundleId: (bundleId) => api.get(`/Shop/bundle-items/${bundleId}`),
-  createBundleItem: (data) => api.post('/Shop/bundle-items', data),
-  updateBundleItem: (bundleId, itemId, data) => api.put(`/Shop/bundle-items/${bundleId}/item/${itemId}`, data),
-  deleteBundleItem: (bundleId, itemId) => api.delete(`/Shop/bundle-items/${bundleId}/item/${itemId}`),
-
-  // Orders
-  getOrders: (params) => api.get('/Shop/orders', { params }),
-  getOrderDetails: (orderId, params) => api.get(`/Shop/orders/${orderId}/details`, { params }),
-  getTopUpHistory: (params) => api.get('/Shop/topup-history', { params }),
+// Orders (PayOS & Management)
+export const orderService = {
+  getAll: (params) => api.get('/Order', { params }),
+  getById: (id) => api.get(`/Order/${id}`),
+  getDetails: (orderId, params) => api.get(`/Order/${orderId}/details`, { params }),
+  createPayment: (data) => api.post('/Order', data),
+  cancelPayment: (orderId, cancellationReason) => api.post(`/Order/${orderId}/cancel`, null, { params: { cancellationReason } }),
 };
 
 // Users
 export const userService = {
   getAll: (params) => api.get('/User', { params }),
   getById: (id) => api.get(`/User/${id}`),
+  getStatus: (id, onlineThresholdSeconds = 60) => api.get(`/User/${id}/status`, { params: { onlineThresholdSeconds } }),
   create: (data) => api.post('/User', data),
   update: (id, data) => api.put(`/User/${id}`, data),
   ban: (id, data) => api.delete(`/User/${id}`, { data }),
+  heartbeat: () => api.post('/User/me/heartbeat'),
+  logout: () => api.post('/User/me/logout'),
+  uploadAvatar: (formData) => api.post('/User/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   getBanLogs: (userId, params) => api.get(`/User/${userId}/ban-logs`, { params }),
   getAllBanLogs: (params) => api.get('/User/ban-logs', { params }),
   createBanLog: (data) => api.post('/User/ban-logs', data),

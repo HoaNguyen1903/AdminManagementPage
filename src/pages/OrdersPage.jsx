@@ -10,25 +10,35 @@ import {
     Tabs,
     Tab,
     CircularProgress,
-    Chip
+    Chip,
+    Grid,
+    Divider,
+    Link
 } from '@mui/material';
 import DataTable from '../components/DataTable';
-import { shopService, userService } from '../api/services';
+import { shopService, userService, orderService, itemService } from '../api/services';
 
 const OrdersPage = () => {
-    const [tabValue, setTabValue] = useState(0);
     const [orders, setOrders] = useState([]);
-    const [topUpHistory, setTopUpHistory] = useState([]);
     const [users, setUsers] = useState([]);
     const [gemBundles, setGemBundles] = useState([]);
     const [skinBundles, setSkinBundles] = useState([]);
+    const [items, setItems] = useState([]);
     const [openDetails, setOpenDetails] = useState(false);
     const [currentOrder, setCurrentOrder] = useState(null);
+    const [fullOrderInfo, setFullOrderInfo] = useState(null);
     const [orderDetails, setOrderDetails] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [detailsLoading, setDetailsLoading] = useState(false);
 
-    const handleTabChange = (event, newValue) => {
-        setTabValue(newValue);
+    const getStatusColor = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'paid': return 'success';
+            case 'pending': return 'warning';
+            case 'cancelled': return 'error';
+            case 'expired': return 'default';
+            default: return 'primary';
+        }
     };
 
     // Create lookup maps for names
@@ -56,6 +66,14 @@ const OrdersPage = () => {
         return map;
     }, [skinBundles]);
 
+    const itemMap = useMemo(() => {
+        const map = {};
+        items.forEach(item => {
+            map[item.itemId] = item.itemName;
+        });
+        return map;
+    }, [items]);
+
     const orderColumns = [
         { id: 'shopOrderId', label: 'Order ID', minWidth: 50 },
         { id: 'userId', label: 'User ID', minWidth: 50 },
@@ -66,83 +84,65 @@ const OrdersPage = () => {
             render: (row) => userMap[row.userId] || 'Unknown'
         },
         { id: 'totalAmount', label: 'Total Amount', minWidth: 100 },
+        { 
+            id: 'status', 
+            label: 'Status', 
+            minWidth: 100,
+            render: (row) => row.status ? (
+                <Chip 
+                    label={row.status} 
+                    size="small" 
+                    color={getStatusColor(row.status)}
+                />
+            ) : 'N/A'
+        },
         { id: 'orderDate', label: 'Date', minWidth: 150 },
     ];
 
     const detailColumns = [
         { id: 'shopOrderDetailId', label: 'Detail ID', minWidth: 50 },
         { 
-            id: 'skinAndCharacterBundleId', 
+            id: 'bundleName', 
             label: 'Bundle', 
-            minWidth: 150,
+            minWidth: 200,
             render: (row) => {
-                const name = skinBundleMap[row.skinAndCharacterBundleId] || 'Unknown Bundle';
+                const name = row.gemBundleId ? gemBundleMap[row.gemBundleId] : skinBundleMap[row.skinAndCharacterBundleId];
                 return (
                     <Chip 
-                        label={name} 
+                        label={name || 'Unknown Bundle'} 
                         size="small" 
                         variant="outlined"
-                        color="secondary"
+                        color={row.gemBundleId ? "primary" : "secondary"}
                     />
                 );
             }
         },
-        { id: 'itemId', label: 'Item ID', minWidth: 80 },
+        { 
+            id: 'itemId', 
+            label: 'Item', 
+            minWidth: 150,
+            render: (row) => itemMap[row.itemId] || `Item #${row.itemId}`
+        },
         { id: 'quantity', label: 'Quantity', minWidth: 50 },
         { id: 'unitPrice', label: 'Unit Price', minWidth: 100 },
-    ];
-
-    const topUpColumns = [
-        { id: 'topUpId', label: 'ID', minWidth: 50 },
-        { id: 'userId', label: 'User ID', minWidth: 50 },
-        { 
-            id: 'userName', 
-            label: 'User Name', 
-            minWidth: 150,
-            render: (row) => userMap[row.userId] || 'Unknown'
-        },
-        { 
-            id: 'gemBundleId', 
-            label: 'Bundle', 
-            minWidth: 150,
-            render: (row) => {
-                const name = gemBundleMap[row.gemBundleId] || 'Unknown Bundle';
-                return (
-                    <Chip 
-                        label={name} 
-                        size="small" 
-                        variant="outlined"
-                        color="primary"
-                    />
-                );
-            }
-        },
-        { id: 'gemsAmount', label: 'Gems', minWidth: 80 },
-        { id: 'realMoneyAmount', label: 'Amount', minWidth: 100 },
-        { id: 'currencyCode', label: 'Currency', minWidth: 80 },
-        { id: 'status', label: 'Status', minWidth: 100 },
-        { id: 'date', label: 'Date', minWidth: 150 },
     ];
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [usersRes, gemRes, skinRes] = await Promise.all([
+            const [usersRes, gemRes, skinRes, itemsRes] = await Promise.all([
                 userService.getAll(),
                 shopService.getGemBundles(),
-                shopService.getSkinBundles()
+                shopService.getSkinBundles(),
+                itemService.getAll()
             ]);
             setUsers(usersRes.data || []);
             setGemBundles(gemRes.data || []);
             setSkinBundles(skinRes.data || []);
+            setItems(itemsRes.data || []);
 
-            if (tabValue === 0) {
-                const res = await shopService.getOrders();
-                setOrders(res.data || []);
-            } else {
-                const res = await shopService.getTopUpHistory();
-                setTopUpHistory(res.data || []);
-            }
+            const res = await orderService.getAll();
+            setOrders(res.data || []);
         } catch (error) {
             console.error('Failed to fetch orders/history', error);
         } finally {
@@ -152,28 +152,46 @@ const OrdersPage = () => {
 
     useEffect(() => {
         fetchData();
-    }, [tabValue]);
+    }, []);
 
     const handleViewDetails = async (order) => {
         setCurrentOrder(order);
+        setOpenDetails(true);
+        setDetailsLoading(true);
         try {
-            const res = await shopService.getOrderDetails(order.shopOrderId);
-            setOrderDetails(res.data || []);
-            setOpenDetails(true);
+            // Fetch both order details and the full order info (with PayOS data)
+            const [detailsRes, fullInfoRes] = await Promise.all([
+                orderService.getDetails(order.shopOrderId),
+                orderService.getById(order.shopOrderId)
+            ]);
+            setOrderDetails(detailsRes.data || []);
+            setFullOrderInfo(fullInfoRes.data);
         } catch (error) {
             console.error('Failed to fetch order details', error);
+        } finally {
+            setDetailsLoading(false);
+        }
+    };
+
+    const handleCancelOrder = async () => {
+        if (!currentOrder) return;
+        const reason = prompt("Enter cancellation reason:");
+        if (reason === null) return;
+
+        try {
+            await orderService.cancelPayment(currentOrder.shopOrderId, reason);
+            // Refresh data
+            handleViewDetails(currentOrder);
+            fetchData();
+        } catch (error) {
+            console.error('Failed to cancel order', error);
+            alert('Failed to cancel order');
         }
     };
 
     return (
         <Box sx={{ width: '100%' }}>
-            <Typography variant="h4" sx={{ mb: 2 }}>Orders & History</Typography>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-                <Tabs value={tabValue} onChange={handleTabChange} aria-label="order tabs">
-                    <Tab label="Shop Orders" />
-                    <Tab label="TopUp History" />
-                </Tabs>
-            </Box>
+            <Typography variant="h4" sx={{ mb: 2 }}>Orders</Typography>
 
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
@@ -181,32 +199,86 @@ const OrdersPage = () => {
                 </Box>
             ) : (
                 <DataTable
-                    columns={tabValue === 0 ? orderColumns : topUpColumns}
-                    data={tabValue === 0 ? orders : topUpHistory}
-                    onView={tabValue === 0 ? handleViewDetails : null}
-                    disableActions={tabValue !== 0}
-                    searchPlaceholder="Search history..."
+                    columns={orderColumns}
+                    data={orders}
+                    onView={handleViewDetails}
+                    searchPlaceholder="Search orders..."
                 />
             )}
 
             <Dialog open={openDetails} onClose={() => setOpenDetails(false)} maxWidth="md" fullWidth>
-                <DialogTitle>Order Details #{currentOrder?.shopOrderId}</DialogTitle>
-                <DialogContent>
-                    {currentOrder && (
-                        <Box sx={{ mb: 2 }}>
-                            <Typography><strong>User:</strong> {userMap[currentOrder.userId] || 'Unknown'} (ID: {currentOrder.userId})</Typography>
-                            <Typography><strong>Date:</strong> {currentOrder.orderDate}</Typography>
-                            <Typography><strong>Total Amount:</strong> ${currentOrder.totalAmount}</Typography>
-                        </Box>
+                <DialogTitle>
+                    Order Details #{currentOrder?.shopOrderId}
+                    {fullOrderInfo?.orderCode && (
+                        <Typography variant="subtitle2" color="textSecondary">
+                            PayOS Code: {fullOrderInfo.orderCode}
+                        </Typography>
                     )}
-                    <DataTable
-                        columns={detailColumns}
-                        data={orderDetails}
-                        disableActions
-                        searchPlaceholder="Search order details..."
-                    />
+                </DialogTitle>
+                <DialogContent dividers>
+                    {detailsLoading ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                            <CircularProgress />
+                        </Box>
+                    ) : (
+                        <>
+                            {fullOrderInfo && (
+                                <Box sx={{ mb: 3 }}>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} md={6}>
+                                            <Typography variant="subtitle2" color="textSecondary">Customer Info</Typography>
+                                            <Typography><strong>User:</strong> {userMap[fullOrderInfo.userId] || fullOrderInfo.playerUserName || 'Unknown'} (ID: {fullOrderInfo.userId})</Typography>
+                                            <Typography><strong>Email:</strong> {fullOrderInfo.playerEmail || 'N/A'}</Typography>
+                                            <Typography><strong>Date:</strong> {new Date(fullOrderInfo.orderDate).toLocaleString()}</Typography>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Typography variant="subtitle2" color="textSecondary">Payment Info</Typography>
+                                            <Typography>
+                                                <strong>Status: </strong> 
+                                                <Chip 
+                                                    label={fullOrderInfo.status} 
+                                                    size="small" 
+                                                    color={getStatusColor(fullOrderInfo.status)}
+                                                />
+                                            </Typography>
+                                            <Typography><strong>Total Amount:</strong> {fullOrderInfo.totalAmount.toLocaleString()} {fullOrderInfo.currency || 'VND'}</Typography>
+                                            <Typography><strong>Paid:</strong> {fullOrderInfo.amountPaid.toLocaleString()} {fullOrderInfo.currency || 'VND'}</Typography>
+                                            {fullOrderInfo.checkoutUrl && fullOrderInfo.status === 'PENDING' && (
+                                                <Typography sx={{ mt: 1 }}>
+                                                    <Link href={fullOrderInfo.checkoutUrl} target="_blank" rel="noopener">
+                                                        Open Payment Link
+                                                    </Link>
+                                                </Typography>
+                                            )}
+                                        </Grid>
+                                    </Grid>
+                                    
+                                    {fullOrderInfo.cancellationReason && (
+                                        <Box sx={{ mt: 2, p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
+                                            <Typography variant="body2" color="error.contrastText">
+                                                <strong>Cancellation Reason:</strong> {fullOrderInfo.cancellationReason}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Box>
+                            )}
+                            
+                            <Divider sx={{ my: 2 }} />
+                            
+                            <Typography variant="h6" sx={{ mb: 1 }}>Items</Typography>
+                            <DataTable
+                                columns={detailColumns}
+                                data={orderDetails}
+                                disableActions
+                                searchPlaceholder="Search order items..."
+                            />
+                        </>
+                    )}
                 </DialogContent>
                 <DialogActions>
+                    {fullOrderInfo?.status === 'PENDING' && (
+                        <Button color="error" onClick={handleCancelOrder}>Cancel Order</Button>
+                    )}
                     <Button onClick={() => setOpenDetails(false)}>Close</Button>
                 </DialogActions>
             </Dialog>

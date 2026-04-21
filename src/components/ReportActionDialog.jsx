@@ -15,7 +15,7 @@ import {
     Box,
     CircularProgress
 } from '@mui/material';
-import { userService } from '../api/services';
+import { userService, feedbackService } from '../api/services';
 import DataTable from './DataTable';
 
 const ReportActionDialog = ({ open, onClose, report, onActionSuccess }) => {
@@ -79,7 +79,12 @@ const ReportActionDialog = ({ open, onClose, report, onActionSuccess }) => {
 
         try {
             setLoading(true);
+            // 1. Ban the user
             await userService.ban(userData.userId, { banReason, bannedUntil });
+            
+            // 2. Approve the report (formally resolve it)
+            await feedbackService.approveReport(report.reportId);
+            
             onActionSuccess();
             onClose();
         } catch (error) {

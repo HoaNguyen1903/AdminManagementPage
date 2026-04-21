@@ -311,7 +311,7 @@ const HomePage = () => {
                       </Typography>
 
                       <Typography variant="caption" color="text.secondary">
-                        Includes top-ups and shop orders
+                        Based on shop orders
                       </Typography>
                     </CardContent>
                   </Card>

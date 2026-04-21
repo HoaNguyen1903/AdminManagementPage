@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
     Box,
     Button,
@@ -23,6 +23,14 @@ const ShopPage = () => {
     const [openModal, setOpenModal] = useState(false);
     const [currentEntity, setCurrentEntity] = useState(null);
     const [items, setItems] = useState([]);
+
+    const itemMap = useMemo(() => {
+        const map = {};
+        items.forEach(item => {
+            map[item.itemId] = item.itemName;
+        });
+        return map;
+    }, [items]);
     
     const [formData, setFormData] = useState({
         bundleName: '',
@@ -41,16 +49,25 @@ const ShopPage = () => {
             { id: 'gemBundleId', label: 'ID', minWidth: 50 },
             { id: 'bundleName', label: 'Bundle Name', minWidth: 200 },
             { id: 'bundlePrice', label: 'Price', minWidth: 100 },
+            { 
+                id: 'itemId', 
+                label: 'Item', 
+                minWidth: 150,
+                render: (row) => itemMap[row.itemId] || `Item #${row.itemId}`
+            },
+            { id: 'quantity', label: 'Quantity', minWidth: 80 },
         ],
         1: [
             { id: 'skinAndCharacterBundleId', label: 'ID', minWidth: 50 },
             { id: 'bundleName', label: 'Bundle Name', minWidth: 200 },
             { id: 'bundlePrice', label: 'Price', minWidth: 100 },
-        ],
-        2: [
-            { id: 'skinAndCharacterBundleId', label: 'Bundle ID', minWidth: 100 },
-            { id: 'itemId', label: 'Item ID', minWidth: 100 },
-            { id: 'quantity', label: 'Quantity', minWidth: 100 },
+            { 
+                id: 'itemId', 
+                label: 'Item', 
+                minWidth: 150,
+                render: (row) => itemMap[row.itemId] || `Item #${row.itemId}`
+            },
+            { id: 'quantity', label: 'Quantity', minWidth: 80 },
         ]
     };
 
@@ -59,8 +76,7 @@ const ShopPage = () => {
         try {
             let res;
             if (tab === 0) res = await shopService.getGemBundles();
-            else if (tab === 1) res = await shopService.getSkinBundles();
-            else res = await shopService.getAllBundleItems();
+            else res = await shopService.getSkinBundles();
             setData(res.data);
         } catch (error) {
             console.error('Failed to fetch shop data', error);
@@ -80,7 +96,7 @@ const ShopPage = () => {
 
     useEffect(() => {
         fetchData(tabValue);
-        if (tabValue === 2) fetchItems();
+        fetchItems();
     }, [tabValue]);
 
     const handleCreate = () => {
@@ -97,18 +113,12 @@ const ShopPage = () => {
 
     const handleEdit = (entity) => {
         setCurrentEntity(entity);
-        if (tabValue === 0 || tabValue === 1) {
-            setFormData({
-                bundleName: entity.bundleName,
-                bundlePrice: entity.bundlePrice,
-            });
-        } else {
-            setFormData({
-                skinAndCharacterBundleId: entity.skinAndCharacterBundleId,
-                itemId: entity.itemId,
-                quantity: entity.quantity
-            });
-        }
+        setFormData({
+            bundleName: entity.bundleName,
+            bundlePrice: entity.bundlePrice,
+            itemId: entity.itemId || '',
+            quantity: entity.quantity || 1
+        });
         setOpenModal(true);
     };
 
@@ -116,8 +126,7 @@ const ShopPage = () => {
         if (window.confirm('Are you sure you want to delete this?')) {
             try {
                 if (tabValue === 0) await shopService.deleteGemBundle(entity.gemBundleId);
-                else if (tabValue === 1) await shopService.deleteSkinBundle(entity.skinAndCharacterBundleId);
-                else await shopService.deleteBundleItem(entity.skinAndCharacterBundleId, entity.itemId);
+                else await shopService.deleteSkinBundle(entity.skinAndCharacterBundleId);
                 fetchData(tabValue);
             } catch (error) {
                 console.error('Failed to delete', error);
@@ -130,12 +139,9 @@ const ShopPage = () => {
             if (tabValue === 0) {
                 if (currentEntity) await shopService.updateGemBundle(currentEntity.gemBundleId, formData);
                 else await shopService.createGemBundle(formData);
-            } else if (tabValue === 1) {
+            } else {
                 if (currentEntity) await shopService.updateSkinBundle(currentEntity.skinAndCharacterBundleId, formData);
                 else await shopService.createSkinBundle(formData);
-            } else {
-                if (currentEntity) await shopService.updateBundleItem(currentEntity.skinAndCharacterBundleId, currentEntity.itemId, formData);
-                else await shopService.createBundleItem(formData);
             }
             setOpenModal(false);
             fetchData(tabValue);
@@ -154,7 +160,6 @@ const ShopPage = () => {
                 <Tabs value={tabValue} onChange={handleTabChange} aria-label="shop tabs">
                     <Tab label="Gem Bundles" />
                     <Tab label="Skin/Character Bundles" />
-                    <Tab label="Bundle Items" />
                 </Tabs>
             </Box>
             
@@ -174,71 +179,47 @@ const ShopPage = () => {
 
             <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>
-                    {currentEntity ? 'Edit' : 'Create'} {tabValue === 0 ? 'Gem Bundle' : tabValue === 1 ? 'Skin Bundle' : 'Bundle Item'}
+                    {currentEntity ? 'Edit' : 'Create'} {tabValue === 0 ? 'Gem Bundle' : 'Skin Bundle'}
                 </DialogTitle>
                 <DialogContent>
-                    {(tabValue === 0 || tabValue === 1) ? (
-                        <>
-                            <TextField
-                                autoFocus
-                                margin="dense"
-                                label="Bundle Name"
-                                fullWidth
-                                value={formData.bundleName}
-                                onChange={(e) => setFormData({ ...formData, bundleName: e.target.value })}
-                            />
-                            <TextField
-                                margin="dense"
-                                label="Price"
-                                type="number"
-                                fullWidth
-                                value={formData.bundlePrice}
-                                onChange={(e) => setFormData({ ...formData, bundlePrice: parseFloat(e.target.value) })}
-                            />
-                        </>
-                    ) : (
-                        <>
-                            <TextField
-                                select
-                                margin="dense"
-                                label="Bundle ID"
-                                fullWidth
-                                disabled={!!currentEntity}
-                                value={formData.skinAndCharacterBundleId}
-                                onChange={(e) => setFormData({ ...formData, skinAndCharacterBundleId: e.target.value })}
-                            >
-                                {/* This should ideally be a list of bundles */}
-                                {data.filter((v, i, a) => a.findIndex(t => t.skinAndCharacterBundleId === v.skinAndCharacterBundleId) === i).map(b => (
-                                    <MenuItem key={b.skinAndCharacterBundleId} value={b.skinAndCharacterBundleId}>
-                                        Bundle #{b.skinAndCharacterBundleId}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                            <TextField
-                                select
-                                margin="dense"
-                                label="Item"
-                                fullWidth
-                                disabled={!!currentEntity}
-                                value={formData.itemId}
-                                onChange={(e) => setFormData({ ...formData, itemId: e.target.value })}
-                            >
-                                {items.map(item => (
-                                    <MenuItem key={item.itemId} value={item.itemId}>
-                                        {item.itemName}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                            <TextField
-                                margin="dense"
-                                label="Quantity"
-                                type="number"
-                                fullWidth
-                                value={formData.quantity}
-                                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
-                            />
-                        </>
-                    )}
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Bundle Name"
+                        fullWidth
+                        value={formData.bundleName}
+                        onChange={(e) => setFormData({ ...formData, bundleName: e.target.value })}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Price"
+                        type="number"
+                        fullWidth
+                        value={formData.bundlePrice}
+                        onChange={(e) => setFormData({ ...formData, bundlePrice: parseFloat(e.target.value) })}
+                    />
+                    <TextField
+                        select
+                        margin="dense"
+                        label="Item"
+                        fullWidth
+                        value={formData.itemId}
+                        onChange={(e) => setFormData({ ...formData, itemId: e.target.value })}
+                    >
+                        {items.map(item => (
+                            <MenuItem key={item.itemId} value={item.itemId}>
+                                {item.itemName}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                    <TextField
+                        margin="dense"
+                        label="Quantity"
+                        type="number"
+                        fullWidth
+                        value={formData.quantity}
+                        onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenModal(false)}>Cancel</Button>
