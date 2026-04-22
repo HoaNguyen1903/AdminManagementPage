@@ -106,6 +106,7 @@ const HomePage = () => {
         const params = {
           start: period.start.toISOString(),
           end: period.end.toISOString(),
+          status: 'paid',
           ...(period.unit === "month" && { groupBy: "month" }),
         };
 
@@ -121,6 +122,7 @@ const HomePage = () => {
           const prevParams = {
             start: period.prevStart.toISOString(),
             end: period.prevEnd.toISOString(),
+            status: 'paid',
             ...(period.unit === "month" && { groupBy: "month" }),
           };
           promises.push(dashboardService.getRevenue(prevParams));
@@ -307,7 +309,7 @@ const HomePage = () => {
                       </Typography>
 
                       <Typography variant="h5" fontWeight="bold">
-                        ${totalRevenue.toLocaleString()}
+                        {totalRevenue.toLocaleString()} VND
                       </Typography>
 
                       <Typography variant="caption" color="text.secondary">
@@ -329,7 +331,7 @@ const HomePage = () => {
                           Total Revenue
                         </Typography>
                         <Typography variant="subtitle1" fontWeight="bold">
-                          ${totalRevenue.toLocaleString()}
+                          {totalRevenue.toLocaleString()} VND
                         </Typography>
                       </Box>
 
@@ -521,7 +523,7 @@ const HomePage = () => {
 
                           <TableCell align="right">
                             <Typography variant="body2" fontWeight="bold">
-                              ${bundle.revenue.toLocaleString()}
+                              {bundle.revenue.toLocaleString()} VND
                             </Typography>
                           </TableCell>
                         </TableRow>

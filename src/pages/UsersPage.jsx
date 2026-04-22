@@ -219,10 +219,10 @@ const UsersPage = () => {
         setCurrentUser(user);
         try {
             const [itemsRes, bundlesRes] = await Promise.all([
-                userItemService.getByUserId(user.userId),
+                userItemService.getUserItemsWithNames(user.userId),
                 userService.getUserBundles(user.userId)
             ]);
-            setUserItems(itemsRes.data.map(i => ({ ...i, itemName: itemMap[i.itemId] || `Item #${i.itemId}` })));
+            setUserItems(itemsRes.data);
             setUserBundles(bundlesRes.data);
             setOpenInventory(true);
         } catch (error) {

@@ -10,6 +10,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import EditIcon from '@mui/icons-material/Edit';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import ThemeToggle from './ThemeToggle';
+import NotificationDropdown from './NotificationDropdown';
 import Sidebar from './Sidebar';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -160,10 +161,11 @@ const Layout = ({ children }) => {
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-                        Admin Dashboard
+                        Game Management System
                     </Typography>
                     
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <NotificationDropdown />
                         <ThemeToggle />
                         
                         <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>

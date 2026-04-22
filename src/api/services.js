@@ -100,6 +100,7 @@ export const userItemService = {
   create: (data) => api.post('/UserItem', data),
   update: (userId, itemId, data) => api.put(`/UserItem/${userId}/items/${itemId}`, data),
   delete: (userId, itemId) => api.delete(`/UserItem/${userId}/items/${itemId}`),
+  getUserItemsWithNames: (userId, params) => api.get(`/User/${userId}/items`, { params }),
 };
 
 // Staff

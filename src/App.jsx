@@ -6,7 +6,7 @@ import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import CharactersPage from './pages/CharactersPage';
-import FeedbackPage from './pages/FeedbackPage';
+import ReportsPage from './pages/ReportsPage';
 import ItemsPage from './pages/ItemsPage';
 import ShopPage from './pages/ShopPage';
 import OrdersPage from './pages/OrdersPage';
@@ -40,7 +40,7 @@ const App = () => {
                             <Route path="/" element={<HomePage />} />
                             <Route path="/announcements" element={<AnnouncementsPage />} />
                             <Route path="/characters" element={<CharactersPage />} />
-                            <Route path="/feedback" element={<FeedbackPage />} />
+                            <Route path="/reports" element={<ReportsPage />} />
                             <Route path="/items" element={<ItemsPage />} />
                             <Route path="/shop" element={<ShopPage />} />
                             <Route path="/orders" element={<OrdersPage />} />
