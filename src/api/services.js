@@ -119,4 +119,5 @@ export const dashboardService = {
   getPlayerStats: (params) => api.get('/Dashboard/player-stats', { params }),
   getPlayerHistory: (params) => api.get('/Dashboard/player-history', { params }),
   getCurrentStats: () => api.get('/Dashboard/current-stats'),
+  getUserRanking: (params) => api.get('/Dashboard/top-spenders', { params }),
 };

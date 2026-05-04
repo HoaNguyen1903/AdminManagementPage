@@ -28,7 +28,8 @@ const DataTable = ({
     onDelete,
     viewLabel = "View",
     searchPlaceholder = "Search...",
-    disableActions = false
+    disableActions = false,
+    hideSearch = false
 }) => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -78,17 +79,19 @@ const DataTable = ({
 
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden', p: 2 }}>
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                <TextField
-                    label={searchPlaceholder}
-                    variant="outlined"
-                    size="small"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    autoComplete="new-password"
-                    name={`search-${Math.random().toString(36).substring(7)}`}
-                />
-            </Box>
+            {!hideSearch && (
+                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <TextField
+                        label={searchPlaceholder}
+                        variant="outlined"
+                        size="small"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        autoComplete="new-password"
+                        name={`search-${Math.random().toString(36).substring(7)}`}
+                    />
+                </Box>
+            )}
             <TableContainer>
                 <Table stickyHeader aria-label="sticky table">
                     <TableHead>

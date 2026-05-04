@@ -43,6 +43,7 @@ const HomePage = () => {
   const [revenueData, setRevenueData] = useState([]);
   const [prevRevenueData, setPrevRevenueData] = useState([]);
   const [bundleRankings, setBundleRankings] = useState([]);
+  const [userRanking, setUserRanking] = useState([]);
   const [playerStats, setPlayerStats] = useState({
     currentOnline: 0,
     dailyActiveUsers: 0,
@@ -115,6 +116,7 @@ const HomePage = () => {
           dashboardService.getBundleRanking({ ...params, top: 5 }),
           dashboardService.getPlayerStats(params),
           dashboardService.getPlayerHistory(params),
+          dashboardService.getUserRanking({ ...params, top: 3 }),
         ];
 
         // Fetch previous revenue if period supports it
@@ -128,10 +130,11 @@ const HomePage = () => {
           promises.push(dashboardService.getRevenue(prevParams));
         }
 
-        const [revenueRes, bundleRes, statsRes, historyRes, prevRevenueRes] = await Promise.all(promises);
+        const [revenueRes, bundleRes, statsRes, historyRes, rankingRes, prevRevenueRes] = await Promise.all(promises);
 
         setRevenueData(revenueRes.data || []);
         setBundleRankings(bundleRes.data || []);
+        setUserRanking(rankingRes.data || []);
         setPlayerStats(statsRes.data || {
           currentOnline: 0,
           dailyActiveUsers: 0,
@@ -280,14 +283,14 @@ const HomePage = () => {
       <Grid container spacing={3}>
         {/* ===================== Revenue Section ===================== */}
         {(tab === "all" || tab === "revenue") && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Paper sx={{ p: 2.5, borderRadius: 2 }}>
               <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
                 Revenue (General)
               </Typography>
 
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <Card sx={{ borderRadius: 2 }}>
                     <CardContent>
                       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
@@ -319,7 +322,7 @@ const HomePage = () => {
                   </Card>
                 </Grid>
 
-                <Grid item xs={12} md={9}>
+                <Grid size={{ xs: 12, md: 9 }}>
                   <Paper sx={{ p: 2, borderRadius: 2, height: "100%" }}>
                     <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
                       Revenue Analytics
@@ -360,14 +363,14 @@ const HomePage = () => {
 
         {/* ===================== Player Section ===================== */}
         {(tab === "all" || tab === "player") && (
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Paper sx={{ p: 2.5, borderRadius: 2 }}>
               <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
                 Players
               </Typography>
 
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <Card sx={{ borderRadius: 2 }}>
                     <CardContent>
                       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
@@ -388,7 +391,7 @@ const HomePage = () => {
                   </Card>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <Card sx={{ borderRadius: 2 }}>
                     <CardContent>
                       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
@@ -408,7 +411,7 @@ const HomePage = () => {
                   </Card>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={4}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <Card sx={{ borderRadius: 2 }}>
                     <CardContent>
                       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
@@ -428,7 +431,7 @@ const HomePage = () => {
                   </Card>
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Paper sx={{ p: 2, borderRadius: 2 }}>
                     <Box
                       sx={{
@@ -473,7 +476,7 @@ const HomePage = () => {
 
         {/* ===================== Bundle Revenue Ranking Section ===================== */}
         {(tab === "all" || tab === "bundle") && (
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 2.5, borderRadius: 2 }}>
               <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
                 Bundle Revenue Ranking
@@ -484,7 +487,6 @@ const HomePage = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell>Bundle Name</TableCell>
-                      <TableCell>Type</TableCell>
                       <TableCell align="right">Sales</TableCell>
                       <TableCell align="right">Revenue</TableCell>
                     </TableRow>
@@ -493,7 +495,7 @@ const HomePage = () => {
                   <TableBody>
                     {bundleRankings.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={4}>
+                        <TableCell colSpan={3}>
                           <Typography variant="body2" color="text.secondary">
                             No bundle revenue data found.
                           </Typography>
@@ -506,14 +508,12 @@ const HomePage = () => {
                             <Typography variant="body2" fontWeight="bold">
                               {bundle.bundleName}
                             </Typography>
-                          </TableCell>
-
-                          <TableCell>
                             <Chip
                               label={bundle.type}
                               size="small"
                               color={bundle.type === "Gem" ? "primary" : "secondary"}
                               variant="outlined"
+                              sx={{ mt: 0.5, height: 20, fontSize: "0.65rem" }}
                             />
                           </TableCell>
 
@@ -524,6 +524,73 @@ const HomePage = () => {
                           <TableCell align="right">
                             <Typography variant="body2" fontWeight="bold">
                               {bundle.revenue.toLocaleString()} VND
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Grid>
+        )}
+
+        {/* ===================== User Ranking Section ===================== */}
+        {(tab === "all" || tab === "revenue") && (
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Paper sx={{ p: 2.5, borderRadius: 2 }}>
+              <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+                User Ranking
+              </Typography>
+
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>User</TableCell>
+                      <TableCell align="right">Transactions</TableCell>
+                      <TableCell align="right">Total Spent</TableCell>
+                    </TableRow>
+                  </TableHead>
+
+                  <TableBody>
+                    {userRanking.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3}>
+                          <Typography variant="body2" color="text.secondary">
+                            No ranking data found.
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      userRanking.map((spender, index) => (
+                        <TableRow key={index} hover>
+                          <TableCell>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                              <Avatar 
+                                sx={{ width: 32, height: 32, fontSize: "0.875rem", bgcolor: "primary.light" }}
+                              >
+                                {spender.userName ? spender.userName[0].toUpperCase() : spender.email[0].toUpperCase()}
+                              </Avatar>
+                              <Box>
+                                <Typography variant="body2" fontWeight="bold">
+                                  {spender.userName || "Unknown User"}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {spender.email}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </TableCell>
+
+                          <TableCell align="right">
+                            <Typography variant="body2">{spender.transactionCount}</Typography>
+                          </TableCell>
+
+                          <TableCell align="right">
+                            <Typography variant="body2" fontWeight="bold">
+                              {spender.totalSpent.toLocaleString()} VND
                             </Typography>
                           </TableCell>
                         </TableRow>

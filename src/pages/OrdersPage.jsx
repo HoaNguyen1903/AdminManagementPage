@@ -13,23 +13,26 @@ import {
     Chip,
     Grid,
     Divider,
-    Link
+    Link,
+    TextField,
+    MenuItem
 } from '@mui/material';
 import DataTable from '../components/DataTable';
-import { shopService, userService, orderService, itemService } from '../api/services';
+import { userService, orderService } from '../api/services';
 
 const OrdersPage = () => {
     const [orders, setOrders] = useState([]);
     const [users, setUsers] = useState([]);
-    const [gemBundles, setGemBundles] = useState([]);
-    const [skinBundles, setSkinBundles] = useState([]);
-    const [items, setItems] = useState([]);
     const [openDetails, setOpenDetails] = useState(false);
     const [currentOrder, setCurrentOrder] = useState(null);
     const [fullOrderInfo, setFullOrderInfo] = useState(null);
     const [orderDetails, setOrderDetails] = useState([]);
     const [loading, setLoading] = useState(false);
     const [detailsLoading, setDetailsLoading] = useState(false);
+
+    // Search and filter states
+    const [usernameSearch, setUsernameSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All');
 
     const getStatusColor = (status) => {
         switch (status?.toLowerCase()) {
@@ -41,7 +44,7 @@ const OrdersPage = () => {
         }
     };
 
-    // Create lookup maps for names
+    // Create lookup map for user names
     const userMap = useMemo(() => {
         const map = {};
         users.forEach(u => {
@@ -49,30 +52,6 @@ const OrdersPage = () => {
         });
         return map;
     }, [users]);
-
-    const gemBundleMap = useMemo(() => {
-        const map = {};
-        gemBundles.forEach(b => {
-            map[b.gemBundleId] = b.bundleName;
-        });
-        return map;
-    }, [gemBundles]);
-
-    const skinBundleMap = useMemo(() => {
-        const map = {};
-        skinBundles.forEach(b => {
-            map[b.skinAndCharacterBundleId] = b.bundleName;
-        });
-        return map;
-    }, [skinBundles]);
-
-    const itemMap = useMemo(() => {
-        const map = {};
-        items.forEach(item => {
-            map[item.itemId] = item.itemName;
-        });
-        return map;
-    }, [items]);
 
     const orderColumns = [
         { id: 'shopOrderId', label: 'Order ID', minWidth: 50 },
@@ -106,7 +85,7 @@ const OrdersPage = () => {
             label: 'Bundle', 
             minWidth: 200,
             render: (row) => {
-                const name = row.gemBundleId ? gemBundleMap[row.gemBundleId] : skinBundleMap[row.skinAndCharacterBundleId];
+                const name = row.gemBundleName || row.skinAndCharacterBundleName;
                 return (
                     <Chip 
                         label={name || 'Unknown Bundle'} 
@@ -118,28 +97,30 @@ const OrdersPage = () => {
             }
         },
         { 
-            id: 'itemId', 
+            id: 'itemName', 
             label: 'Item', 
             minWidth: 150,
-            render: (row) => itemMap[row.itemId] || `Item #${row.itemId}`
+            render: (row) => row.itemName || `Item #${row.itemId}`
         },
         { id: 'quantity', label: 'Quantity', minWidth: 50 },
         { id: 'unitPrice', label: 'Unit Price', minWidth: 100 },
     ];
 
+    // Filtered orders logic
+    const filteredOrders = useMemo(() => {
+        return orders.filter(order => {
+            const userName = (userMap[order.userId] || '').toLowerCase();
+            const matchesUsername = userName.includes(usernameSearch.toLowerCase());
+            const matchesStatus = statusFilter === 'All' || (order.status || '').toUpperCase() === statusFilter.toUpperCase();
+            return matchesUsername && matchesStatus;
+        });
+    }, [orders, userMap, usernameSearch, statusFilter]);
+
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [usersRes, gemRes, skinRes, itemsRes] = await Promise.all([
-                userService.getAll(),
-                shopService.getGemBundles(),
-                shopService.getSkinBundles(),
-                itemService.getAll()
-            ]);
+            const usersRes = await userService.getAll();
             setUsers(usersRes.data || []);
-            setGemBundles(gemRes.data || []);
-            setSkinBundles(skinRes.data || []);
-            setItems(itemsRes.data || []);
 
             const res = await orderService.getAll();
             setOrders(res.data || []);
@@ -191,7 +172,34 @@ const OrdersPage = () => {
 
     return (
         <Box sx={{ width: '100%' }}>
-            <Typography variant="h4" sx={{ mb: 2 }}>Orders</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h4">Orders</Typography>
+                
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField
+                        label="Search Username"
+                        variant="outlined"
+                        size="small"
+                        value={usernameSearch}
+                        onChange={(e) => setUsernameSearch(e.target.value)}
+                        sx={{ width: 250 }}
+                    />
+                    <TextField
+                        select
+                        label="Status"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        size="small"
+                        sx={{ width: 150 }}
+                    >
+                        <MenuItem value="All">All Status</MenuItem>
+                        <MenuItem value="PAID">Paid</MenuItem>
+                        <MenuItem value="PENDING">Pending</MenuItem>
+                        <MenuItem value="CANCELLED">Cancelled</MenuItem>
+                        <MenuItem value="EXPIRED">Expired</MenuItem>
+                    </TextField>
+                </Box>
+            </Box>
 
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
@@ -200,9 +208,9 @@ const OrdersPage = () => {
             ) : (
                 <DataTable
                     columns={orderColumns}
-                    data={orders}
+                    data={filteredOrders}
                     onView={handleViewDetails}
-                    searchPlaceholder="Search orders..."
+                    hideSearch
                 />
             )}
 
@@ -210,7 +218,7 @@ const OrdersPage = () => {
                 <DialogTitle>
                     Order Details #{currentOrder?.shopOrderId}
                     {fullOrderInfo?.orderCode && (
-                        <Typography variant="subtitle2" color="textSecondary">
+                        <Typography variant="subtitle2" color="textSecondary" component="div">
                             PayOS Code: {fullOrderInfo.orderCode}
                         </Typography>
                     )}
@@ -225,15 +233,15 @@ const OrdersPage = () => {
                             {fullOrderInfo && (
                                 <Box sx={{ mb: 3 }}>
                                     <Grid container spacing={2}>
-                                        <Grid item xs={12} md={6}>
+                                        <Grid size={{ xs: 12, md: 6 }}>
                                             <Typography variant="subtitle2" color="textSecondary">Customer Info</Typography>
-                                            <Typography><strong>User:</strong> {userMap[fullOrderInfo.userId] || fullOrderInfo.playerUserName || 'Unknown'} (ID: {fullOrderInfo.userId})</Typography>
-                                            <Typography><strong>Email:</strong> {fullOrderInfo.playerEmail || 'N/A'}</Typography>
-                                            <Typography><strong>Date:</strong> {new Date(fullOrderInfo.orderDate).toLocaleString()}</Typography>
+                                            <Typography component="div"><strong>User:</strong> {userMap[fullOrderInfo.userId] || fullOrderInfo.playerUserName || 'Unknown'} (ID: {fullOrderInfo.userId})</Typography>
+                                            <Typography component="div"><strong>Email:</strong> {fullOrderInfo.playerEmail || 'N/A'}</Typography>
+                                            <Typography component="div"><strong>Date:</strong> {new Date(fullOrderInfo.orderDate).toLocaleString()}</Typography>
                                         </Grid>
-                                        <Grid item xs={12} md={6}>
+                                        <Grid size={{ xs: 12, md: 6 }}>
                                             <Typography variant="subtitle2" color="textSecondary">Payment Info</Typography>
-                                            <Typography>
+                                            <Typography component="div">
                                                 <strong>Status: </strong> 
                                                 <Chip 
                                                     label={fullOrderInfo.status} 
@@ -241,10 +249,10 @@ const OrdersPage = () => {
                                                     color={getStatusColor(fullOrderInfo.status)}
                                                 />
                                             </Typography>
-                                            <Typography><strong>Total Amount:</strong> {fullOrderInfo.totalAmount.toLocaleString()} {fullOrderInfo.currency || 'VND'}</Typography>
-                                            <Typography><strong>Paid:</strong> {fullOrderInfo.amountPaid.toLocaleString()} {fullOrderInfo.currency || 'VND'}</Typography>
+                                            <Typography component="div"><strong>Total Amount:</strong> {fullOrderInfo.totalAmount.toLocaleString()} {fullOrderInfo.currency || 'VND'}</Typography>
+                                            <Typography component="div"><strong>Paid:</strong> {fullOrderInfo.amountPaid.toLocaleString()} {fullOrderInfo.currency || 'VND'}</Typography>
                                             {fullOrderInfo.checkoutUrl && fullOrderInfo.status === 'PENDING' && (
-                                                <Typography sx={{ mt: 1 }}>
+                                                <Typography sx={{ mt: 1 }} component="div">
                                                     <Link href={fullOrderInfo.checkoutUrl} target="_blank" rel="noopener">
                                                         Open Payment Link
                                                     </Link>
