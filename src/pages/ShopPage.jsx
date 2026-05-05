@@ -62,27 +62,38 @@ const ShopPage = () => {
         setTabValue(newValue);
     };
 
-    // Actions column — eye + edit + delete in same column (compact)
     const actionsColumn = {
         id: 'actions',
         label: 'Actions',
-        minWidth: 140,
+        width: 80,        
+        minWidth: 80,   
+        maxWidth: 120,
+        flex: 0,
+        align: 'center',
         render: (row) => (
-            <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', justifyContent: 'flex-end' }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    gap: 1,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '110%'
+                }}
+            >
                 <Tooltip title="Detail">
-                    <IconButton size="small" onClick={() => handleDetail(row)} aria-label="detail">
+                    <IconButton size="small" onClick={() => handleDetail(row)}>
                         <VisibilityIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>
 
                 <Tooltip title="Edit">
-                    <IconButton size="small" color="primary" onClick={() => handleEdit(row)} aria-label="edit">
+                    <IconButton size="small" color="primary" onClick={() => handleEdit(row)}>
                         <EditIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>
 
                 <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => handleDelete(row)} aria-label="delete">
+                    <IconButton size="small" color="error" onClick={() => handleDelete(row)}>
                         <DeleteIcon fontSize="small" />
                     </IconButton>
                 </Tooltip>
@@ -225,7 +236,7 @@ const ShopPage = () => {
                 bundlePrice: parseFloat(formData.bundlePrice) || 0,
                 itemId: formData.itemId === '' ? null : Number(formData.itemId),
                 quantity: Number(formData.quantity) || 1,
-                imageUrl: formData.imageUrl || null // 🔥 QUAN TRỌNG
+                imageUrl: formData.imageUrl || null
             };
 
             if (tabValue === 0) {
@@ -420,22 +431,17 @@ const ShopPage = () => {
                             </Button>
 
                             {formData.imageUrl && (
-                                <Box
-                                    component="img"
-                                    src={formData.imageUrl}
-                                    alt="preview"
+                                <Typography
+                                    variant="body2"
                                     sx={{
-                                        width: 160,
-                                        height: 160,
-                                        objectFit: 'contain',
-                                        borderRadius: 1,
-                                        border: '1px solid',
-                                        borderColor: 'divider'
+                                        maxWidth: 200,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
                                     }}
-                                    onError={(e) => {
-                                        e.currentTarget.style.display = 'none';
-                                    }}
-                                />
+                                >
+                                    {formData.imageUrl.split('/').pop()}
+                                </Typography>
                             )}
                         </Box>
 
@@ -467,77 +473,122 @@ const ShopPage = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Detail Dialog (clean professional layout matching edit popup style) */}
             <Dialog open={openDetail} onClose={() => setOpenDetail(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Bundle Details</DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ p: 3 }}>
                     {!detailEntity ? (
                         <Typography>Loading...</Typography>
                     ) : (
-                        <Box sx={{ py: 1 }}>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} md={5} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <Box>
+                            {/* IMAGE */}
+                            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+                                <Box
+                                    sx={{
+                                        p: 2,
+                                        borderRadius: 3,
+                                        background: 'rgba(255,255,255,0.04)',
+                                        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                                    }}
+                                >
                                     {detailEntity.imageUrl ? (
                                         <Box
                                             component="img"
                                             src={detailEntity.imageUrl}
                                             alt={detailEntity.bundleName}
-                                            sx={{ width: '100%', maxWidth: 220, height: 220, objectFit: 'contain', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}
+                                            sx={{
+                                                width: 180,
+                                                height: 180,
+                                                objectFit: 'contain',
+                                            }}
                                         />
                                     ) : (
-                                        <Avatar sx={{ width: 160, height: 160, bgcolor: 'background.default' }}>
-                                            {detailEntity.bundleName ? detailEntity.bundleName[0].toUpperCase() : '?'}
+                                        <Avatar sx={{ width: 160, height: 160 }}>
+                                            {detailEntity.bundleName?.[0]?.toUpperCase() || '?'}
                                         </Avatar>
                                     )}
-                                </Grid>
+                                </Box>
+                            </Box>
 
-                                <Grid item xs={12} md={7}>
-                                    <Typography variant="h6" sx={{ mb: 1 }}>{detailEntity.bundleName}</Typography>
-                                    <Divider sx={{ mb: 1 }} />
+                            {/* TITLE */}
+                            <Typography
+                                variant="h5"
+                                align="center"
+                                sx={{
+                                    fontWeight: 700,
+                                    mb: 1,
+                                    background: 'linear-gradient(90deg, #a18cd1, #fbc2eb)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent'
+                                }}
+                            >
+                                {detailEntity.bundleName}
+                            </Typography>
 
-                                    <Grid container spacing={1}>
-                                        <Grid item xs={6}>
-                                            <Typography variant="caption" color="text.secondary">ID</Typography>
-                                            <Typography variant="body2">
-                                                {getEntityIdInfo(detailEntity).idValue}
-                                            </Typography>
-                                        </Grid>
 
-                                        <Grid item xs={6}>
-                                            <Typography variant="caption" color="text.secondary">Price</Typography>
-                                            <Typography variant="body2">
-                                                {detailEntity.bundlePrice?.toLocaleString?.() ?? detailEntity.bundlePrice} VND
-                                            </Typography>
-                                        </Grid>
+                            {/* PRICE */}
+                            <Typography
+                                align="center"
+                                sx={{
+                                    fontSize: 18,
+                                    fontWeight: 600,
+                                    color: '#FFD700',
+                                    mb: 3
+                                }}
+                            >
+                                {detailEntity.bundlePrice?.toLocaleString?.()} VND
+                            </Typography>
 
-                                        <Grid item xs={12} sx={{ mt: 1 }}>
-                                            <Typography variant="caption" color="text.secondary">Item</Typography>
-                                            <Chip label={itemMap[detailEntity.itemId] || `Item #${detailEntity.itemId}`} size="small" sx={{ ml: 1 }} />
-                                        </Grid>
+                            <Divider sx={{ mb: 3 }} />
 
-                                        <Grid item xs={12} sx={{ mt: 1 }}>
-                                            <Typography variant="caption" color="text.secondary">Quantity</Typography>
-                                            <Typography variant="body2" sx={{ ml: 0.5, display: 'inline-block' }}>
-                                                {detailEntity.quantity}
-                                            </Typography>
-                                        </Grid>
+                                <Grid container spacing={2} justifyContent="space-between">
+                                    {/* ID */}
+                                    <Grid item xs={4} textAlign="center">
+                                        <Typography variant="caption" color="text.secondary">
+                                            ID
+                                        </Typography>
+                                        <Typography fontWeight={600}>
+                                            {getEntityIdInfo(detailEntity).idValue}
+                                        </Typography>
+                                    </Grid>
 
-                                        {detailEntity.imageUrl && (
-                                            <Grid item xs={12} sx={{ mt: 1 }}>
-                                                <Typography variant="caption" color="text.secondary">Image URL</Typography>
-                                                <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
-                                                    {detailEntity.imageUrl}
-                                                </Typography>
-                                            </Grid>
-                                        )}
+                                    {/* QUANTITY */}
+                                    <Grid item xs={4} textAlign="center">
+                                        <Typography variant="caption" color="text.secondary">
+                                            Quantity
+                                        </Typography>
+                                        <Typography fontWeight={600}>
+                                            x{detailEntity.quantity}
+                                        </Typography>
+                                    </Grid>
+
+                                    {/* ITEM */}
+                                    <Grid item xs={4} textAlign="center">
+                                        <Typography variant="caption" color="text.secondary">
+                                            Item
+                                        </Typography>
+                                        <Box sx={{ mt: 0.5, display: 'flex', justifyContent: 'center' }}>
+                                            <Chip
+                                                label={itemMap[detailEntity.itemId] || `Item #${detailEntity.itemId}`}
+                                                sx={{ fontWeight: 500 }}
+                                            />
+                                        </Box>
                                     </Grid>
                                 </Grid>
-                            </Grid>
                         </Box>
                     )}
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenDetail(false)}>Close</Button>
+
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button
+                        onClick={() => setOpenDetail(false)}
+                        variant="contained"
+                        sx={{
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            px: 3
+                        }}
+                    >
+                        Close
+                    </Button>
                 </DialogActions>
             </Dialog>
         </Box>
