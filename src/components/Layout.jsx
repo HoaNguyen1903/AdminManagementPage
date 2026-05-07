@@ -167,7 +167,7 @@ const Layout = ({ children }) => {
                         <Divider orientation="vertical" flexItem sx={{ mx: 1, height: 24, alignSelf: 'center' }} />
 
                         <Tooltip title="Staff Profile">
-                            <IconButton onClick={handleProfileOpen} size="small" sx={{ p: 0.5 }}>
+                            <IconButton onClick={handleMenuOpen} size="small" sx={{ p: 0.5 }}>
                                 <Avatar 
                                     src={user?.avatarUrl} 
                                     alt={staffName}

@@ -123,3 +123,8 @@ export const dashboardService = {
   getCurrentStats: () => api.get('/Dashboard/current-stats'),
   getUserRanking: (params) => api.get('/Dashboard/top-spenders', { params }),
 };
+
+// Authentication
+export const authService = {
+  logout: () => api.post('/Auth/logout'),
+};
