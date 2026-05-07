@@ -11,6 +11,7 @@ import ItemsPage from './pages/ItemsPage';
 import ShopPage from './pages/ShopPage';
 import OrdersPage from './pages/OrdersPage';
 import UsersPage from './pages/UsersPage';
+import UserProfilePage from './pages/UserProfilePage';
 
 import Layout from './components/Layout';
 import SessionExpiredDialog from './components/SessionExpiredDialog';
@@ -45,6 +46,7 @@ const App = () => {
                             <Route path="/shop" element={<ShopPage />} />
                             <Route path="/orders" element={<OrdersPage />} />
                             <Route path="/users" element={<UsersPage />} />
+                            <Route path="/users/:id" element={<UserProfilePage />} />
                         </Route>
                     </Routes>
                 </Router>

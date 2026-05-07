@@ -61,6 +61,7 @@ export const shopService = {
 export const orderService = {
   getAll: (params) => api.get('/Order', { params }),
   getById: (id) => api.get(`/Order/${id}`),
+  getByUserId: (userId, params) => api.get(`/Order/user/${userId}`, { params }),
   getDetails: (orderId, params) => api.get(`/Order/${orderId}/details`, { params }),
   createPayment: (data) => api.post('/Order', data),
   cancelPayment: (orderId, cancellationReason) => api.post(`/Order/${orderId}/cancel`, null, { params: { cancellationReason } }),
@@ -70,6 +71,7 @@ export const orderService = {
 export const userService = {
   getAll: (params) => api.get('/User', { params }),
   getById: (id) => api.get(`/User/${id}`),
+  getProfile: (id) => api.get(`/User/${id}/profile`),
   getStatus: (id, onlineThresholdSeconds = 60) => api.get(`/User/${id}/status`, { params: { onlineThresholdSeconds } }),
   create: (data) => api.post('/User', data),
   update: (id, data) => api.put(`/User/${id}`, data),

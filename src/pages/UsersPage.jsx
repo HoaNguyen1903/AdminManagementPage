@@ -12,12 +12,18 @@ import {
     Tab,
     Alert,
     Avatar,
-    Chip
+    Chip,
+    alpha,
+    useTheme
 } from '@mui/material';
 import DataTable from '../components/DataTable';
+import PageHeader from '../components/PageHeader';
 import { userService, itemService, userItemService, shopService } from '../api/services';
+import { useNavigate } from 'react-router-dom';
 
 const UsersPage = () => {
+    const navigate = useNavigate();
+    const theme = useTheme();
     const [users, setUsers] = useState([]);
     const [openModal, setOpenModal] = useState(false);
     const [openInventory, setOpenInventory] = useState(false);
@@ -272,14 +278,17 @@ const UsersPage = () => {
 
     return (
         <Box sx={{ width: '100%' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="h4">Users</Typography>
-                <Button variant="contained" onClick={handleCreate}>Create User</Button>
-            </Box>
+            <PageHeader 
+                title="Users" 
+                subtitle="Manage user accounts, monitor activity, and handle bans"
+                actionLabel="Create User"
+                onAction={handleCreate}
+                breadcrumbs={[{ label: 'Users' }]}
+            />
             <DataTable
                 columns={columns}
                 data={users}
-                onView={handleViewInventory}
+                onView={(row) => navigate(`/users/${row.userId}`)}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 searchPlaceholder="Search users..."

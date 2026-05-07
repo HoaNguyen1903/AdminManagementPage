@@ -11,6 +11,7 @@ import {
     MenuItem
 } from '@mui/material';
 import DataTable from '../components/DataTable';
+import PageHeader from '../components/PageHeader';
 import { announcementService } from '../api/services';
 
 const AnnouncementsPage = () => {
@@ -101,10 +102,13 @@ const AnnouncementsPage = () => {
 
     return (
         <Box sx={{ width: '100%' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="h4">Announcements</Typography>
-                <Button variant="contained" onClick={handleCreate}>Create Announcement</Button>
-            </Box>
+            <PageHeader 
+                title="Announcements" 
+                subtitle="Manage game news and announcements for your players"
+                actionLabel="Create Announcement"
+                onAction={handleCreate}
+                breadcrumbs={[{ label: 'Announcements' }]}
+            />
             <DataTable
                 columns={columns}
                 data={announcements}

@@ -27,8 +27,8 @@ const CustomAppBar = styled(AppBar, {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
     }),
-    marginLeft: miniDrawerWidth,
-    width: `calc(100% - ${miniDrawerWidth}px)`,
+    marginLeft: 80,
+    width: `calc(100% - 80px)`,
     ...(open && {
         marginLeft: drawerWidth,
         width: `calc(100% - ${drawerWidth}px)`,
@@ -144,55 +144,40 @@ const Layout = ({ children }) => {
     const staffName = user?.email ? user.email.split('@')[0] : 'Admin';
 
     return (
-        <Box sx={{ display: 'flex', width: '100%', minHeight: '100vh' }}>
+        <Box sx={{ display: 'flex', width: '100%', minHeight: '100vh', bgcolor: 'background.default' }}>
             <CssBaseline />
             <CustomAppBar position="fixed" open={open}>
-                <Toolbar>
-                    <IconButton
-                        color="inherit"
-                        aria-label="open drawer"
-                        onClick={toggleDrawer}
-                        edge="start"
-                        sx={{
-                            marginRight: 5,
-                            ...(open && { display: 'none' }),
-                        }}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-                        Game Management System
-                    </Typography>
+                <Toolbar sx={{ justifyContent: 'space-between', minHeight: 80 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <IconButton
+                            color="inherit"
+                            aria-label="open drawer"
+                            onClick={toggleDrawer}
+                            edge="start"
+                            sx={{ mr: 2 }}
+                        >
+                            <MenuIcon />
+                        </IconButton>
+                    </Box>
                     
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <NotificationDropdown />
                         <ThemeToggle />
                         
-                        <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                            Hi, {staffName}
-                        </Typography>
-
+                        <Divider orientation="vertical" flexItem sx={{ mx: 1, height: 24, alignSelf: 'center' }} />
 
                         <Tooltip title="Staff Profile">
-                            <IconButton onClick={handleProfileOpen} size="small" sx={{ ml: 1 }}>
+                            <IconButton onClick={handleProfileOpen} size="small" sx={{ p: 0.5 }}>
                                 <Avatar 
                                     src={user?.avatarUrl} 
                                     alt={staffName}
-                                    sx={{ width: 32, height: 32 }}
+                                    sx={{ width: 40, height: 40, border: '2px solid transparent', '&:hover': { borderColor: 'primary.main' } }}
                                 >
                                     {staffName.charAt(0).toUpperCase()}
                                 </Avatar>
                             </IconButton>
                         </Tooltip>
 
-                        <Button 
-                            color="inherit" 
-                            startIcon={<LogoutIcon />} 
-                            onClick={handleLogout}
-                            sx={{ display: { xs: 'none', md: 'flex' } }}
-                        >
-                            Logout
-                        </Button>
                         <Menu
                             anchorEl={anchorEl}
                             open={Boolean(anchorEl)}
@@ -212,10 +197,8 @@ const Layout = ({ children }) => {
                                 <Typography variant="body2">{user?.email}</Typography>
                             </MenuItem>
                             <Divider />
-                            <MenuItem onClick={handleLogout} sx={{ display: { md: 'none' } }}>
-                                <IconButton size="small" sx={{ mr: 1 }}>
-                                    <LogoutIcon fontSize="small" />
-                                </IconButton>
+                            <MenuItem onClick={handleLogout}>
+                                <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
                                 Logout
                             </MenuItem>
                         </Menu>
@@ -223,8 +206,8 @@ const Layout = ({ children }) => {
                 </Toolbar>
             </CustomAppBar>
             <Sidebar open={open} toggleDrawer={toggleDrawer} />
-            <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-                <Toolbar /> {/* Spacer for AppBar */}
+            <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, md: 4 } }}>
+                <Toolbar sx={{ minHeight: 80 }} /> {/* Spacer for AppBar */}
                 {children ? children : <Outlet />}
             </Box>
 

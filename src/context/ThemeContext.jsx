@@ -1,7 +1,7 @@
 import React, { createContext, useState, useMemo, useContext, useEffect } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import createSneatTheme from '../theme/sneatTheme';
+import createDasherTheme from '../theme/dasherTheme';
 
 const ColorModeContext = createContext({ toggleColorMode: () => {} });
 
@@ -18,7 +18,7 @@ export const ColorModeProvider = ({ children }) => {
         return prefersDark ? 'dark' : 'light';
     });
 
-    // Keep Sneat root classes in sync (for vendor CSS that relies on .dark-style/.light-style)
+    // Keep Dasher root classes in sync (for vendor CSS that relies on .dark-style/.light-style)
     useEffect(() => {
         if (typeof document === 'undefined') return;
         if (mode === 'dark') {
@@ -50,7 +50,7 @@ export const ColorModeProvider = ({ children }) => {
                     try {
                         window.localStorage.setItem('color-mode', newMode);
                     } catch (e) {}
-                    // update React state so MUI theme switches (createSneatTheme will read CSS vars after we changed the class)
+                    // update React state so MUI theme switches
                     setMode(newMode);
                 } else {
                     setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
@@ -60,7 +60,7 @@ export const ColorModeProvider = ({ children }) => {
         [mode],
     );
 
-    const theme = useMemo(() => createSneatTheme(mode), [mode]);
+    const theme = useMemo(() => createDasherTheme(mode), [mode]);
 
     return (
         <ColorModeContext.Provider value={colorMode}>

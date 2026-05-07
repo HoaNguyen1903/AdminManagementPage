@@ -17,8 +17,10 @@ import {
 import {
     Visibility as ViewIcon,
     Edit as EditIcon,
-    Delete as DeleteIcon
+    Delete as DeleteIcon,
+    Search as SearchIcon
 } from '@mui/icons-material';
+import { alpha, useTheme } from '@mui/material/styles';
 
 const DataTable = ({
     columns,
@@ -31,6 +33,7 @@ const DataTable = ({
     disableActions = false,
     hideSearch = false
 }) => {
+    const theme = useTheme();
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchTerm, setSearchTerm] = useState('');
@@ -78,21 +81,33 @@ const DataTable = ({
     );
 
     return (
-        <Paper sx={{ width: '100%', overflow: 'hidden', p: 2 }}>
+        <Paper sx={{ width: '100%', overflow: 'hidden', p: 3, borderRadius: 3 }}>
             {!hideSearch && (
-                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-start' }}>
                     <TextField
-                        label={searchPlaceholder}
+                        placeholder={searchPlaceholder}
                         variant="outlined"
                         size="small"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        autoComplete="new-password"
+                        autoComplete="off"
                         name={`search-${Math.random().toString(36).substring(7)}`}
+                        InputProps={{
+                            startAdornment: (
+                                <SearchIcon sx={{ color: 'text.disabled', mr: 1 }} />
+                            ),
+                            sx: {
+                                borderRadius: 2,
+                                width: { xs: '100%', sm: 300 },
+                                bgcolor: alpha(theme.palette.text.primary, 0.04),
+                                '& fieldset': { border: 'none' },
+                                '&:hover': { bgcolor: alpha(theme.palette.text.primary, 0.08) },
+                            }
+                        }}
                     />
                 </Box>
             )}
-            <TableContainer>
+            <TableContainer sx={{ maxHeight: 'calc(100vh - 400px)' }}>
                 <Table stickyHeader aria-label="sticky table">
                     <TableHead>
                         <TableRow>
@@ -107,14 +122,15 @@ const DataTable = ({
                                         active={orderBy === column.id}
                                         direction={orderBy === column.id ? order : 'asc'}
                                         onClick={() => handleRequestSort(column.id)}
+                                        sx={{ fontWeight: 600, fontSize: '0.8125rem', color: 'text.secondary' }}
                                     >
                                         {column.label}
                                     </TableSortLabel>
                                 </TableCell>
                             ))}
                             {!disableActions && (
-                                <TableCell align="right" style={{ minWidth: 100 }}>
-                                    {/* Actions column with blank header */}
+                                <TableCell align="right" style={{ minWidth: 100, fontWeight: 600, fontSize: '0.8125rem', color: 'text.secondary' }}>
+                                    Actions
                                 </TableCell>
                             )}
                         </TableRow>
@@ -126,7 +142,7 @@ const DataTable = ({
                                     {columns.map((column) => {
                                         const value = row[column.id];
                                         return (
-                                            <TableCell key={column.id} align={column.align}>
+                                            <TableCell key={column.id} align={column.align} sx={{ fontSize: '0.875rem' }}>
                                                 {column.render 
                                                     ? column.render(row) 
                                                     : column.format
@@ -137,21 +153,23 @@ const DataTable = ({
                                     })}
                                     {!disableActions && (
                                         <TableCell align="right">
-                                            {onView && (
-                                                <IconButton onClick={() => onView(row)} color="primary" size="small">
-                                                    <ViewIcon />
-                                                </IconButton>
-                                            )}
-                                            {onEdit && (
-                                                <IconButton onClick={() => onEdit(row)} color="info" size="small">
-                                                    <EditIcon />
-                                                </IconButton>
-                                            )}
-                                            {onDelete && (
-                                                <IconButton onClick={() => onDelete(row)} color="error" size="small">
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            )}
+                                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+                                                {onView && (
+                                                    <IconButton onClick={() => onView(row)} size="small" sx={{ color: 'primary.main' }}>
+                                                        <ViewIcon fontSize="small" />
+                                                    </IconButton>
+                                                )}
+                                                {onEdit && (
+                                                    <IconButton onClick={() => onEdit(row)} size="small" sx={{ color: 'info.main' }}>
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                )}
+                                                {onDelete && (
+                                                    <IconButton onClick={() => onDelete(row)} size="small" sx={{ color: 'error.main' }}>
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                )}
+                                            </Box>
                                         </TableCell>
                                     )}
                                 </TableRow>
@@ -168,6 +186,7 @@ const DataTable = ({
                 page={page}
                 onPageChange={handleChangePage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                sx={{ borderTop: `1px dashed ${theme.palette.divider}` }}
             />
         </Paper>
     );

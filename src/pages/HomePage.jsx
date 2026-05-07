@@ -27,17 +27,60 @@ import {
   Search as SearchIcon,
   Block as BlockIcon,
   FiberManualRecord as OnlineIcon,
+  ShoppingCart as OrdersIcon,
+  MonetizationOn as RevenueIcon,
+  Group as ConversionIcon,
 } from "@mui/icons-material";
 
 import { dashboardService } from "../api/services";
 import SimpleLineChart from "../components/SimpleCharts";
+import { useAuth } from "../context/AuthContext";
+import { styled, alpha } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
+
+const GradientBox = styled(Box)(({ theme }) => ({
+  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.2)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
+  padding: theme.spacing(6, 4),
+  borderRadius: theme.shape.borderRadius * 1.5,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: -20,
+    right: -20,
+    width: 140,
+    height: 140,
+    borderRadius: '50%',
+    background: alpha(theme.palette.primary.main, 0.1),
+  }
+}));
+
+const IconCircle = styled(Box)(({ theme, color }) => ({
+  width: 48,
+  height: 48,
+  borderRadius: '50%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: alpha(theme.palette[color].main, 0.12),
+  color: theme.palette[color].main,
+  marginBottom: theme.spacing(2),
+}));
 
 const HomePage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [granularity, setGranularity] = useState("weekly");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
   const [tab, setTab] = useState("all");
+
+  const staffName = user?.email ? user.email.split('@')[0] : 'Admin';
 
   // Data states
   const [revenueData, setRevenueData] = useState([]);
@@ -177,7 +220,7 @@ const HomePage = () => {
     const labels = revenueData.map((item) => item.label);
     const data = revenueData.map((item) => item.revenue);
 
-    return { labels, series: [{ name: "Revenue", data, color: "#696cff" }] };
+    return { labels, series: [{ name: "Revenue", data, color: "#00a76f" }] };
   }, [revenueData]);
 
   // ===================== Player Graph Data =====================
@@ -195,293 +238,222 @@ const HomePage = () => {
     return {
       labels,
       series: [
-        { name: "Peak Online", data: onlineData, color: "#71dd37" },
-        { name: "DAU", data: dauData, color: "#03c3ec" },
+        { name: "Peak Online", data: onlineData, color: "#00b8d9" },
+        { name: "DAU", data: dauData, color: "#ffab00" },
       ],
     };
   }, [playerHistory]);
 
   // ===================== UI =====================
   return (
-    <Box sx={{ p: 2 }}>
-      {/* Header */}
-      <Box
-        sx={{
-          mb: 3,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 2,
-        }}
-      >
-        <Box>
-          <Typography variant="h4" fontWeight="bold">
-            Dashboard
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Overview of revenue, players, and bundle performance
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
-          <Tabs
-            value={tab}
-            onChange={(e, newValue) => setTab(newValue)}
-            textColor="primary"
-            indicatorColor="primary"
-            sx={{
-              "& .MuiTab-root": {
-                textTransform: "none",
-                fontWeight: "bold",
-              },
-            }}
-          >
-            <Tab value="all" label="All" />
-            <Tab value="revenue" label="Revenue" />
-            <Tab value="player" label="Players" />
-            <Tab value="bundle" label="Bundles" />
-          </Tabs>
-
-          <TextField
-            select
-            size="small"
-            value={granularity}
-            onChange={(e) => setGranularity(e.target.value)}
-            sx={{ width: 160 }}
-          >
-            <MenuItem value="weekly">Last 7 Days</MenuItem>
-            <MenuItem value="monthly">Last Month</MenuItem>
-            <MenuItem value="yearly">Last Year</MenuItem>
-            <MenuItem value="all">All Time</MenuItem>
-            <MenuItem value="custom">Custom Range</MenuItem>
-          </TextField>
-
-          {granularity === "custom" && (
-            <>
+    <Box>
+      {/* Top Section: Greeting and Filters */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} lg={8}>
+          <GradientBox>
+            <Typography variant="h4" gutterBottom>
+              👋 Hello {staffName},
+            </Typography>
+            <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 480 }}>
+              Welcome to your Management Dashboard! Monitor your revenue, 
+              track player activity, and gain valuable insights.
+            </Typography>
+          </GradientBox>
+        </Grid>
+        <Grid item xs={12} lg={4}>
+          <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">Quick Filters</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
-                type="date"
+                select
                 size="small"
-                label="From"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-              <TextField
-                type="date"
-                size="small"
-                label="To"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-              />
-            </>
-          )}
-        </Box>
-      </Box>
+                fullWidth
+                value={granularity}
+                onChange={(e) => setGranularity(e.target.value)}
+              >
+                <MenuItem value="weekly">Last 7 Days</MenuItem>
+                <MenuItem value="monthly">Last Month</MenuItem>
+                <MenuItem value="yearly">Last Year</MenuItem>
+                <MenuItem value="all">All Time</MenuItem>
+                <MenuItem value="custom">Custom Range</MenuItem>
+              </TextField>
+
+              {granularity === "custom" && (
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    type="date"
+                    size="small"
+                    fullWidth
+                    label="From"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                  <TextField
+                    type="date"
+                    size="small"
+                    fullWidth
+                    label="To"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Box>
+              )}
+              
+              <Tabs
+                value={tab}
+                onChange={(e, newValue) => setTab(newValue)}
+                variant="fullWidth"
+                sx={{
+                  minHeight: 40,
+                  '& .MuiTab-root': { py: 1, minHeight: 40, fontSize: '0.75rem' }
+                }}
+              >
+                <Tab value="all" label="All" />
+                <Tab value="revenue" label="Revenue" />
+                <Tab value="player" label="Players" />
+                <Tab value="bundle" label="Bundles" />
+              </Tabs>
+            </Box>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Metric Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ p: 3 }}>
+            <IconCircle color="warning">
+              <OrdersIcon />
+            </IconCircle>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Total Sales (Bundles)
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <Typography variant="h5">
+                {bundleRankings.reduce((sum, b) => sum + b.count, 0)}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 600 }}>
+                +12%
+              </Typography>
+            </Box>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ p: 3 }}>
+            <IconCircle color="primary">
+              <RevenueIcon />
+            </IconCircle>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Total Revenue
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <Typography variant="h5">
+                {(totalRevenue / 1000).toFixed(0)}k
+              </Typography>
+              {revenueGrowth !== null && (
+                <Typography variant="caption" sx={{ color: revenueGrowth >= 0 ? 'success.main' : 'error.main', fontWeight: 600 }}>
+                  {revenueGrowth >= 0 ? '+' : ''}{revenueGrowth.toFixed(1)}%
+                </Typography>
+              )}
+            </Box>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ p: 3 }}>
+            <IconCircle color="info">
+              <PeopleIcon />
+            </IconCircle>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Active Players
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <Typography variant="h5">
+                {playerStats.dailyActiveUsers}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'error.main', fontWeight: 600 }}>
+                -3.2%
+              </Typography>
+            </Box>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ p: 3 }}>
+            <IconCircle color="error">
+              <BlockIcon />
+            </IconCircle>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Banned Accounts
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <Typography variant="h5">
+                {playerStats.bannedAccountsCount}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+                Total
+              </Typography>
+            </Box>
+          </Card>
+        </Grid>
+      </Grid>
 
       <Grid container spacing={3}>
         {/* ===================== Revenue Section ===================== */}
         {(tab === "all" || tab === "revenue") && (
-          <Grid size={12}>
-            <Paper sx={{ p: 2.5, borderRadius: 2 }}>
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                Revenue (General)
-              </Typography>
-
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <Card sx={{ borderRadius: 2 }}>
-                    <CardContent>
-                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                        <Avatar sx={{ bgcolor: "primary.light", color: "primary.main" }}>
-                          <TrendingUpIcon />
-                        </Avatar>
-                        {revenueGrowth !== null && (
-                          <Chip 
-                            label={`${revenueGrowth >= 0 ? "+" : ""}${revenueGrowth.toFixed(1)}%`} 
-                            color={revenueGrowth >= 0 ? "success" : "error"} 
-                            size="small" 
-                            variant="outlined" 
-                          />
-                        )}
-                      </Box>
-
-                      <Typography color="text.secondary" variant="body2">
-                        Total Revenue
-                      </Typography>
-
-                      <Typography variant="h5" fontWeight="bold">
-                        {totalRevenue.toLocaleString()} VND
-                      </Typography>
-
-                      <Typography variant="caption" color="text.secondary">
-                        Based on shop orders
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-
-                <Grid size={{ xs: 12, md: 9 }}>
-                  <Paper sx={{ p: 2, borderRadius: 2, height: "100%" }}>
-                    <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
-                      Revenue Analytics
-                    </Typography>
-
-                    <Box sx={{ display: "flex", gap: 4, mb: 2 }}>
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Total Revenue
-                        </Typography>
-                        <Typography variant="subtitle1" fontWeight="bold">
-                          {totalRevenue.toLocaleString()} VND
-                        </Typography>
-                      </Box>
-
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Data Points
-                        </Typography>
-                        <Typography variant="subtitle1" fontWeight="bold">
-                          {revenueData.length}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    <SimpleLineChart
-                      labels={revenueGraphData.labels}
-                      series={revenueGraphData.series}
-                      height={260}
-                      loading={loading}
-                    />
-                  </Paper>
-                </Grid>
-              </Grid>
-            </Paper>
+          <Grid item xs={12} lg={8}>
+            <Card sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                <Typography variant="h6">Revenue Analytics</Typography>
+                <Chip label="Live" color="success" size="small" variant="outlined" />
+              </Box>
+              <SimpleLineChart
+                labels={revenueGraphData.labels}
+                series={revenueGraphData.series}
+                height={320}
+                loading={loading}
+              />
+            </Card>
           </Grid>
         )}
 
         {/* ===================== Player Section ===================== */}
         {(tab === "all" || tab === "player") && (
-          <Grid size={12}>
-            <Paper sx={{ p: 2.5, borderRadius: 2 }}>
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                Players
+          <Grid item xs={12} lg={4}>
+            <Card sx={{ p: 3, height: '100%' }}>
+              <Typography variant="h6" gutterBottom>Player History</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                Online & DAU Trends
               </Typography>
-
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <Card sx={{ borderRadius: 2 }}>
-                    <CardContent>
-                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                        <Avatar sx={{ bgcolor: "success.light", color: "success.main" }}>
-                          <OnlineIcon />
-                        </Avatar>
-                        <Chip label="LIVE" color="success" size="small" variant="outlined" />
-                      </Box>
-
-                      <Typography color="text.secondary" variant="body2">
-                        Online Players
-                      </Typography>
-
-                      <Typography variant="h5" fontWeight="bold">
-                        {playerStats.currentOnline}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <Card sx={{ borderRadius: 2 }}>
-                    <CardContent>
-                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                        <Avatar sx={{ bgcolor: "info.light", color: "info.main" }}>
-                          <PeopleIcon />
-                        </Avatar>
-                      </Box>
-
-                      <Typography color="text.secondary" variant="body2">
-                        Daily Active Users
-                      </Typography>
-
-                      <Typography variant="h5" fontWeight="bold">
-                        {playerStats.dailyActiveUsers}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <Card sx={{ borderRadius: 2 }}>
-                    <CardContent>
-                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                        <Avatar sx={{ bgcolor: "error.light", color: "error.main" }}>
-                          <BlockIcon />
-                        </Avatar>
-                      </Box>
-
-                      <Typography color="text.secondary" variant="body2">
-                        Banned Accounts
-                      </Typography>
-
-                      <Typography variant="h5" fontWeight="bold">
-                        {playerStats.bannedAccountsCount}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-
-                <Grid size={12}>
-                  <Paper sx={{ p: 2, borderRadius: 2 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                        gap: 2,
-                        mb: 2,
-                      }}
-                    >
-                      <Typography variant="subtitle1" fontWeight="bold">
-                        Player Activity History
-                      </Typography>
-
-                      <Box sx={{ display: "flex", gap: 2 }}>
-                        <Chip
-                          size="small"
-                          label="Peak Online"
-                          sx={{ bgcolor: "#71dd37", color: "white" }}
-                        />
-                        <Chip
-                          size="small"
-                          label="DAU"
-                          sx={{ bgcolor: "#03c3ec", color: "white" }}
-                        />
-                      </Box>
-                    </Box>
-
-                    <SimpleLineChart
-                      labels={playerGraphData.labels}
-                      series={playerGraphData.series}
-                      height={280}
-                      loading={loading}
-                    />
-                  </Paper>
-                </Grid>
-              </Grid>
-            </Paper>
+              <SimpleLineChart
+                labels={playerGraphData.labels}
+                series={playerGraphData.series}
+                height={280}
+                loading={loading}
+              />
+              <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#00b8d9' }} />
+                  <Typography variant="caption">Peak Online</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#ffab00' }} />
+                  <Typography variant="caption">DAU</Typography>
+                </Box>
+              </Box>
+            </Card>
           </Grid>
         )}
 
-        {/* ===================== Bundle Revenue Ranking Section ===================== */}
+        {/* ===================== Bundle Ranking Section ===================== */}
         {(tab === "all" || tab === "bundle") && (
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 2.5, borderRadius: 2 }}>
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                Bundle Revenue Ranking
-              </Typography>
-
+          <Grid item xs={12} md={6}>
+            <Card>
+              <Box sx={{ p: 3, borderBottom: '1px dashed', borderColor: 'divider' }}>
+                <Typography variant="h6">Bundle Revenue Ranking</Typography>
+              </Box>
               <TableContainer>
                 <Table size="small">
                   <TableHead>
@@ -491,59 +463,33 @@ const HomePage = () => {
                       <TableCell align="right">Revenue</TableCell>
                     </TableRow>
                   </TableHead>
-
                   <TableBody>
-                    {bundleRankings.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={3}>
-                          <Typography variant="body2" color="text.secondary">
-                            No bundle revenue data found.
-                          </Typography>
+                    {bundleRankings.map((bundle, index) => (
+                      <TableRow key={index} hover>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={600}>{bundle.bundleName}</Typography>
+                          <Typography variant="caption" color="text.secondary">{bundle.type}</Typography>
+                        </TableCell>
+                        <TableCell align="right">{bundle.count}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 700 }}>
+                          {bundle.revenue.toLocaleString()}
                         </TableCell>
                       </TableRow>
-                    ) : (
-                      bundleRankings.map((bundle, index) => (
-                        <TableRow key={index} hover>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight="bold">
-                              {bundle.bundleName}
-                            </Typography>
-                            <Chip
-                              label={bundle.type}
-                              size="small"
-                              color={bundle.type === "Gem" ? "primary" : "secondary"}
-                              variant="outlined"
-                              sx={{ mt: 0.5, height: 20, fontSize: "0.65rem" }}
-                            />
-                          </TableCell>
-
-                          <TableCell align="right">
-                            <Typography variant="body2">{bundle.count}</Typography>
-                          </TableCell>
-
-                          <TableCell align="right">
-                            <Typography variant="body2" fontWeight="bold">
-                              {bundle.revenue.toLocaleString()} VND
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                    ))}
                   </TableBody>
                 </Table>
               </TableContainer>
-            </Paper>
+            </Card>
           </Grid>
         )}
 
         {/* ===================== User Ranking Section ===================== */}
         {(tab === "all" || tab === "revenue") && (
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 2.5, borderRadius: 2 }}>
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-                User Ranking
-              </Typography>
-
+          <Grid item xs={12} md={6}>
+            <Card>
+              <Box sx={{ p: 3, borderBottom: '1px dashed', borderColor: 'divider' }}>
+                <Typography variant="h6">User Ranking (Top Spenders)</Typography>
+              </Box>
               <TableContainer>
                 <Table size="small">
                   <TableHead>
@@ -553,53 +499,35 @@ const HomePage = () => {
                       <TableCell align="right">Total Spent</TableCell>
                     </TableRow>
                   </TableHead>
-
                   <TableBody>
-                    {userRanking.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={3}>
-                          <Typography variant="body2" color="text.secondary">
-                            No ranking data found.
-                          </Typography>
+                    {userRanking.map((spender, index) => (
+                      <TableRow 
+                        key={index} 
+                        hover 
+                        onClick={() => navigate(`/users/${spender.userId}`)}
+                        sx={{ cursor: 'pointer' }}
+                      >
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.light', fontSize: '0.75rem' }}>
+                              {spender.userName ? spender.userName[0].toUpperCase() : spender.email[0].toUpperCase()}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="body2" fontWeight={600}>{spender.userName || "Unknown"}</Typography>
+                              <Typography variant="caption" color="text.secondary">{spender.email}</Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell align="right">{spender.transactionCount}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 700 }}>
+                          {spender.totalSpent.toLocaleString()}
                         </TableCell>
                       </TableRow>
-                    ) : (
-                      userRanking.map((spender, index) => (
-                        <TableRow key={index} hover>
-                          <TableCell>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                              <Avatar 
-                                sx={{ width: 32, height: 32, fontSize: "0.875rem", bgcolor: "primary.light" }}
-                              >
-                                {spender.userName ? spender.userName[0].toUpperCase() : spender.email[0].toUpperCase()}
-                              </Avatar>
-                              <Box>
-                                <Typography variant="body2" fontWeight="bold">
-                                  {spender.userName || "Unknown User"}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {spender.email}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          </TableCell>
-
-                          <TableCell align="right">
-                            <Typography variant="body2">{spender.transactionCount}</Typography>
-                          </TableCell>
-
-                          <TableCell align="right">
-                            <Typography variant="body2" fontWeight="bold">
-                              {spender.totalSpent.toLocaleString()} VND
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                    ))}
                   </TableBody>
                 </Table>
               </TableContainer>
-            </Paper>
+            </Card>
           </Grid>
         )}
       </Grid>

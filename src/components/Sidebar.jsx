@@ -9,7 +9,8 @@ import {
     Divider,
     IconButton,
     Box,
-    useTheme
+    useTheme,
+    Typography
 } from '@mui/material';
 import {
     Dashboard as DashboardIcon,
@@ -44,19 +45,18 @@ const Sidebar = ({ open, toggleDrawer }) => {
     const theme = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
-    // const { logout } = useAuth();
 
     return (
         <Drawer
             variant="permanent"
             open={open}
             sx={{
-                width: open ? drawerWidth : 65,
+                width: open ? drawerWidth : 80,
                 flexShrink: 0,
                 whiteSpace: 'nowrap',
                 boxSizing: 'border-box',
                 '& .MuiDrawer-paper': {
-                    width: open ? drawerWidth : 65,
+                    width: open ? drawerWidth : 80,
                     transition: theme.transitions.create('width', {
                         easing: theme.transitions.easing.sharp,
                         duration: theme.transitions.duration.enteringScreen,
@@ -64,6 +64,7 @@ const Sidebar = ({ open, toggleDrawer }) => {
                     overflowX: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
+                    padding: '0 12px',
                 },
             }}
         >
@@ -71,67 +72,93 @@ const Sidebar = ({ open, toggleDrawer }) => {
                 sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'flex-end',
-                    padding: theme.spacing(0, 1),
-                    // necessary for content to be below app bar
-                    ...theme.mixins.toolbar,
+                    justifyContent: open ? 'space-between' : 'center',
+                    padding: '20px 8px',
+                    minHeight: 80,
                 }}
             >
-                <IconButton onClick={toggleDrawer}>
-                    {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-                </IconButton>
-            </Box>
-            <Divider />
-            <List sx={{ flexGrow: 1 }}>
-                {menuItems.map((item) => (
-                    <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
-                        <ListItemButton
-                            sx={{
-                                minHeight: 48,
-                                justifyContent: open ? 'initial' : 'center',
-                                px: 2.5,
-                            }}
-                            selected={location.pathname === item.path}
-                            onClick={() => navigate(item.path)}
-                        >
-                            <ListItemIcon
-                                sx={{
-                                    minWidth: 0,
-                                    mr: open ? 3 : 'auto',
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                {item.icon}
-                            </ListItemIcon>
-                            <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
-                        </ListItemButton>
-                    </ListItem>
-                ))}
-            </List>
-            {/* <Divider />
-            <List>
-                <ListItem disablePadding sx={{ display: 'block' }}>
-                    <ListItemButton
-                        sx={{
-                            minHeight: 48,
-                            justifyContent: open ? 'initial' : 'center',
-                            px: 2.5,
-                        }}
-                        onClick={logout}
-                    >
-                        <ListItemIcon
-                            sx={{
-                                minWidth: 0,
-                                mr: open ? 3 : 'auto',
+                {open && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Box 
+                            sx={{ 
+                                width: 32, 
+                                height: 32, 
+                                borderRadius: '8px', 
+                                bgcolor: 'primary.main',
+                                display: 'flex',
+                                alignItems: 'center',
                                 justifyContent: 'center',
+                                color: 'white'
                             }}
                         >
-                            <LogoutIcon />
-                        </ListItemIcon>
-                        <ListItemText primary="Logout" sx={{ opacity: open ? 1 : 0 }} />
-                    </ListItemButton>
-                </ListItem>
-            </List> */}
+                            <DashboardIcon fontSize="small" />
+                        </Box>
+                        <Typography variant="h6" fontWeight="700" color="primary">
+                            Dasher
+                        </Typography>
+                    </Box>
+                )}
+                {!open && (
+                    <Box 
+                        sx={{ 
+                            width: 32, 
+                            height: 32, 
+                            borderRadius: '8px', 
+                            bgcolor: 'primary.main',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white'
+                        }}
+                    >
+                        <DashboardIcon fontSize="small" />
+                    </Box>
+                )}
+            </Box>
+
+            <List sx={{ mt: 2 }}>
+                {menuItems.map((item) => {
+                    const active = location.pathname === item.path;
+                    return (
+                        <ListItem key={item.text} disablePadding sx={{ display: 'block', mb: 0.5 }}>
+                            <ListItemButton
+                                sx={{
+                                    minHeight: 44,
+                                    justifyContent: open ? 'initial' : 'center',
+                                    px: 2,
+                                    borderRadius: '8px',
+                                    color: active ? 'primary.main' : 'text.secondary',
+                                    bgcolor: active ? 'rgba(0, 167, 111, 0.08)' : 'transparent',
+                                    '&:hover': {
+                                        bgcolor: active ? 'rgba(0, 167, 111, 0.12)' : 'rgba(145, 158, 171, 0.08)',
+                                    },
+                                }}
+                                onClick={() => navigate(item.path)}
+                            >
+                                <ListItemIcon
+                                    sx={{
+                                        minWidth: 0,
+                                        mr: open ? 2 : 'auto',
+                                        justifyContent: 'center',
+                                        color: active ? 'primary.main' : 'inherit',
+                                    }}
+                                >
+                                    {item.icon}
+                                </ListItemIcon>
+                                {open && (
+                                    <ListItemText 
+                                        primary={item.text} 
+                                        primaryTypographyProps={{ 
+                                            fontSize: '0.875rem',
+                                            fontWeight: active ? 600 : 500
+                                        }} 
+                                    />
+                                )}
+                            </ListItemButton>
+                        </ListItem>
+                    );
+                })}
+            </List>
         </Drawer>
     );
 };
