@@ -75,7 +75,7 @@ const OrdersPage = () => {
                 />
             ) : 'N/A'
         },
-        { id: 'orderDate', label: 'Date', minWidth: 150 },
+        { id: 'orderDate', label: 'Date', minWidth: 150, format: (v) => v ? new Date(v).toLocaleString() : 'N/A' },
     ];
 
     const detailColumns = [

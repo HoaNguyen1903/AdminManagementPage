@@ -32,8 +32,8 @@ const AnnouncementsPage = () => {
         { id: 'title', label: 'Title', minWidth: 150 },
         { id: 'type', label: 'Type', minWidth: 100 },
         { id: 'status', label: 'Status', minWidth: 100 },
-        { id: 'startDate', label: 'Start Date', minWidth: 150 },
-        { id: 'endDate', label: 'End Date', minWidth: 150 },
+        { id: 'startDate', label: 'Start Date', minWidth: 150, format: (v) => v ? new Date(v).toLocaleString() : 'N/A' },
+        { id: 'endDate', label: 'End Date', minWidth: 150, format: (v) => v ? new Date(v).toLocaleString() : 'N/A' },
     ];
 
     const fetchAnnouncements = async () => {

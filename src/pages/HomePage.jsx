@@ -32,7 +32,7 @@ import {
   Group as ConversionIcon,
 } from "@mui/icons-material";
 
-import { dashboardService } from "../api/services";
+import { dashboardService, userService } from "../api/services";
 import SimpleLineChart from "../components/SimpleCharts";
 import { useAuth } from "../context/AuthContext";
 import { styled, alpha } from "@mui/material/styles";
@@ -87,6 +87,7 @@ const HomePage = () => {
   const [prevRevenueData, setPrevRevenueData] = useState([]);
   const [bundleRankings, setBundleRankings] = useState([]);
   const [userRanking, setUserRanking] = useState([]);
+  const [spenderProfiles, setSpenderProfiles] = useState({});
   const [playerStats, setPlayerStats] = useState({
     currentOnline: 0,
     dailyActiveUsers: 0,
@@ -190,6 +191,20 @@ const HomePage = () => {
         } else {
           setPrevRevenueData([]);
         }
+
+        // Fetch user profiles for avatars in top spenders ranking
+        const topSpenders = rankingRes.data || [];
+        const profilePromises = topSpenders.map(spender => 
+          userService.getById(spender.userId).catch(() => null)
+        );
+        const profileResponses = await Promise.all(profilePromises);
+        const profilesMap = {};
+        profileResponses.forEach((res, index) => {
+          if (res && res.data) {
+            profilesMap[topSpenders[index].userId] = res.data;
+          }
+        });
+        setSpenderProfiles(profilesMap);
       } catch (e) {
         console.error("Failed to load dashboard data", e);
       } finally {
@@ -509,8 +524,13 @@ const HomePage = () => {
                       >
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.light', fontSize: '0.75rem' }}>
-                              {spender.userName ? spender.userName[0].toUpperCase() : spender.email[0].toUpperCase()}
+                            <Avatar 
+                              src={spenderProfiles[spender.userId]?.avatarUrl}
+                              sx={{ width: 32, height: 32, bgcolor: 'primary.light', fontSize: '0.75rem' }}
+                            >
+                              {spenderProfiles[spender.userId]?.firstName 
+                                ? spenderProfiles[spender.userId].firstName[0].toUpperCase()
+                                : (spender.userName ? spender.userName[0].toUpperCase() : spender.email[0].toUpperCase())}
                             </Avatar>
                             <Box>
                               <Typography variant="body2" fontWeight={600}>{spender.userName || "Unknown"}</Typography>
