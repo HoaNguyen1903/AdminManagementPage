@@ -316,7 +316,6 @@ const ItemsPage = () => {
                     <MenuItem value="">All Status</MenuItem>
                     <MenuItem value="Available">Available</MenuItem>
                     <MenuItem value="Unavailable">Unavailable</MenuItem>
-                    <MenuItem value="Discontinued">Discontinued</MenuItem>
 
                 </TextField>
                 <Button
