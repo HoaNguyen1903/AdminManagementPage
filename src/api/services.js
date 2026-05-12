@@ -13,11 +13,29 @@ export const announcementService = {
 export const characterService = {
   getStats: (params) => api.get('/Character/stats', { params }),
   getStatById: (id) => api.get(`/Character/stats/${id}`),
+  createStat: (data) => api.post('/Character/stats', data),
+  updateStat: (id, data) => api.put(`/Character/stats/${id}`, data),
+  
   getPvPs: (params) => api.get('/Character/pvp', { params }),
   getPvPById: (id) => api.get(`/Character/pvp/${id}`),
+  createPvP: (data) => api.post('/Character/pvp', data),
+  updatePvP: (id, data) => api.put(`/Character/pvp/${id}`, data),
+  
   getPassives: (params) => api.get('/Character/passives', { params }),
+  getPassiveById: (id) => api.get(`/Character/passives/${id}`),
+  createPassive: (data) => api.post('/Character/passives', data),
+  updatePassive: (id, data) => api.put(`/Character/passives/${id}`, data),
+  
   getSkills: (params) => api.get('/Character/skills', { params }),
+  getSkillById: (id) => api.get(`/Character/skills/${id}`),
+  createSkill: (data) => api.post('/Character/skills', data),
+  updateSkill: (id, data) => api.put(`/Character/skills/${id}`, data),
+  
   getAttacks: (params) => api.get('/Character/attacks', { params }),
+  getAttackById: (id) => api.get(`/Character/attacks/${id}`),
+  createAttack: (data) => api.post('/Character/attacks', data),
+  updateAttack: (id, data) => api.put(`/Character/attacks/${id}`, data),
+  
   getAbilitiesSet: (tacticId) => api.get(`/Character/abilities/${tacticId}`),
 };
 
@@ -37,6 +55,7 @@ export const itemService = {
   getById: (id) => api.get(`/Item/${id}`),
   create: (data) => api.post('/Item', data),
   update: (id, data) => api.put(`/Item/${id}`, data),
+  updateStatus: (id, status) => api.patch(`/Item/${id}/status`, null, { params: { status } }),
   delete: (id) => api.delete(`/Item/${id}`),
 };
 
@@ -47,6 +66,7 @@ export const shopService = {
   getGemBundleById: (id) => api.get(`/Shop/gem-bundles/${id}`),
   createGemBundle: (data) => api.post('/Shop/gem-bundles', data),
   updateGemBundle: (id, data) => api.put(`/Shop/gem-bundles/${id}`, data),
+  updateGemBundleStatus: (id, status) => api.patch(`/Shop/gem-bundles/${id}/status`, null, { params: { status } }),
   deleteGemBundle: (id) => api.delete(`/Shop/gem-bundles/${id}`),
 
   // Skin and Character Bundles
@@ -54,6 +74,7 @@ export const shopService = {
   getSkinBundleById: (id) => api.get(`/Shop/skin-and-character-bundles/${id}`),
   createSkinBundle: (data) => api.post('/Shop/skin-and-character-bundles', data),
   updateSkinBundle: (id, data) => api.put(`/Shop/skin-and-character-bundles/${id}`, data),
+  updateSkinBundleStatus: (id, status) => api.patch(`/Shop/skin-and-character-bundles/${id}/status`, null, { params: { status } }),
   deleteSkinBundle: (id) => api.delete(`/Shop/skin-and-character-bundles/${id}`),
 };
 

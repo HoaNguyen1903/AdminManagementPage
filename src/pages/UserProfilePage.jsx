@@ -7,9 +7,6 @@ import {
   Typography,
   Avatar,
   Divider,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Chip,
   CircularProgress,
   Stack,
@@ -28,22 +25,25 @@ import {
   MenuItem,
   Tabs,
   Tab,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import {
-  ExpandMore as ExpandMoreIcon,
   Inventory as InventoryIcon,
   ReceiptLong as OrderIcon,
   History as TransactionIcon,
   Email as EmailIcon,
   CalendarToday as DateIcon,
   AccountCircle as UserIcon,
+  Gavel as GavelIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 
 import PageHeader from "../components/PageHeader";
 import { userService } from "../api/services";
 
 // -------------------------
-// Reusable Helpers
+// Helpers
 // -------------------------
 const safeDate = (value) => {
   if (!value) return null;
@@ -53,24 +53,14 @@ const safeDate = (value) => {
 
 const compareValues = (a, b, order = "asc") => {
   const isAsc = order === "asc";
-
   if (a == null && b == null) return 0;
   if (a == null) return isAsc ? 1 : -1;
   if (b == null) return isAsc ? -1 : 1;
-
-  if (typeof a === "number" && typeof b === "number") {
-    return isAsc ? a - b : b - a;
-  }
-
-  // Compare Date
-  if (a instanceof Date && b instanceof Date) {
+  if (typeof a === "number" && typeof b === "number") return isAsc ? a - b : b - a;
+  if (a instanceof Date && b instanceof Date)
     return isAsc ? a.getTime() - b.getTime() : b.getTime() - a.getTime();
-  }
-
-  // Compare String fallback
   const aStr = String(a).toLowerCase();
   const bStr = String(b).toLowerCase();
-
   if (aStr < bStr) return isAsc ? -1 : 1;
   if (aStr > bStr) return isAsc ? 1 : -1;
   return 0;
@@ -94,64 +84,78 @@ const getStatusColor = (status) => {
 // -------------------------
 // Reusable Sortable Table
 // -------------------------
-const SortableTable = ({
-  columns,
-  rows,
-  sortBy,
-  sortOrder,
-  onSort,
-  emptyText = "No data found",
-  maxHeight = 420,
-}) => {
-  return (
-    <TableContainer sx={{ maxHeight }}>
-      <Table stickyHeader size="small">
-        <TableHead>
-          <TableRow>
+const SortableTable = ({ columns, rows, sortBy, sortOrder, onSort, emptyText = "No data found" }) => (
+  <Table stickyHeader size="small">
+    <TableHead>
+      <TableRow>
+        {columns.map((col) => (
+          <TableCell
+            key={col.key}
+            align={col.align || "left"}
+            sx={{ bgcolor: "background.paper", fontWeight: 700 }}
+          >
+            {col.sortable ? (
+              <TableSortLabel
+                active={sortBy === col.key}
+                direction={sortBy === col.key ? sortOrder : "asc"}
+                onClick={() => onSort(col.key)}
+              >
+                {col.label}
+              </TableSortLabel>
+            ) : (
+              col.label
+            )}
+          </TableCell>
+        ))}
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {rows.length === 0 ? (
+        <TableRow>
+          <TableCell colSpan={columns.length} align="center" sx={{ py: 4 }}>
+            <Typography variant="body2" color="text.secondary">
+              {emptyText}
+            </Typography>
+          </TableCell>
+        </TableRow>
+      ) : (
+        rows.map((row, index) => (
+          <TableRow key={row.id ?? index} hover>
             {columns.map((col) => (
               <TableCell key={col.key} align={col.align || "left"}>
-                {col.sortable ? (
-                  <TableSortLabel
-                    active={sortBy === col.key}
-                    direction={sortBy === col.key ? sortOrder : "asc"}
-                    onClick={() => onSort(col.key)}
-                  >
-                    {col.label}
-                  </TableSortLabel>
-                ) : (
-                  col.label
-                )}
+                {col.render ? col.render(row) : row[col.key] ?? "N/A"}
               </TableCell>
             ))}
           </TableRow>
-        </TableHead>
+        ))
+      )}
+    </TableBody>
+  </Table>
+);
 
-        <TableBody>
-          {rows.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={columns.length} align="center" sx={{ py: 3 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {emptyText}
-                </Typography>
-              </TableCell>
-            </TableRow>
-          ) : (
-            rows.map((row, index) => (
-              <TableRow key={row.id ?? index} hover>
-                {columns.map((col) => (
-                  <TableCell key={col.key} align={col.align || "left"}>
-                    {col.render ? col.render(row) : row[col.key] ?? "N/A"}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
-};
+// -------------------------
+// Search Bar
+// -------------------------
+const SearchBar = ({ value, onChange, placeholder = "Search..." }) => (
+  <TextField
+    size="small"
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    placeholder={placeholder}
+    sx={{ minWidth: 220 }}
+    InputProps={{
+      startAdornment: (
+        <InputAdornment position="start">
+          <SearchIcon fontSize="small" color="action" />
+        </InputAdornment>
+      ),
+    }}
+  />
+);
 
+// -------------------------
+// Main Component
+// -------------------------
 const UserProfilePage = () => {
   const { id } = useParams();
   const theme = useTheme();
@@ -159,16 +163,15 @@ const UserProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
 
-  // Orders state
+  const [inventorySearch, setInventorySearch] = useState("");
   const [orderSortBy, setOrderSortBy] = useState("orderDate");
   const [orderSortOrder, setOrderSortOrder] = useState("desc");
   const [statusFilter, setStatusFilter] = useState("all");
-
-  // Transactions state
+  const [orderSearch, setOrderSearch] = useState("");
   const [txSortBy, setTxSortBy] = useState("transactionDateTime");
   const [txSortOrder, setTxSortOrder] = useState("desc");
-
-  // Tabs state
+  const [txSearch, setTxSearch] = useState("");
+  const [banSearch, setBanSearch] = useState("");
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
@@ -183,7 +186,6 @@ const UserProfilePage = () => {
         setLoading(false);
       }
     };
-
     fetchUserData();
   }, [id]);
 
@@ -191,6 +193,7 @@ const UserProfilePage = () => {
   const inventory = profile?.inventory || [];
   const orders = profile?.orders || [];
   const transactions = profile?.transactions || [];
+  const banLogs = profile?.banLogs || [];
 
   const fullName = useMemo(() => {
     if (!user) return "Unknown User";
@@ -210,54 +213,75 @@ const UserProfilePage = () => {
     }
   };
 
-  // -------------------------
-  // Processed Orders
-  // -------------------------
-  const processedOrders = useMemo(() => {
-    const filtered = orders.filter((o) => {
-      if (statusFilter === "all") return true;
-      return o.status?.toLowerCase() === statusFilter.toLowerCase();
-    });
+  const processedInventory = useMemo(() => {
+    const q = inventorySearch.toLowerCase();
+    if (!q) return inventory;
+    return inventory.filter((item) => (item.itemName || "").toLowerCase().includes(q));
+  }, [inventory, inventorySearch]);
 
-    const sorted = [...filtered].sort((a, b) => {
+  const processedOrders = useMemo(() => {
+    const q = orderSearch.toLowerCase();
+    const filtered = orders.filter((o) => {
+      const matchStatus =
+        statusFilter === "all" || o.status?.toLowerCase() === statusFilter.toLowerCase();
+      const matchSearch =
+        !q ||
+        String(o.shopOrderId || "").toLowerCase().includes(q) ||
+        (o.status || "").toLowerCase().includes(q) ||
+        String(o.totalAmount || "").includes(q);
+      return matchStatus && matchSearch;
+    });
+    return [...filtered].sort((a, b) => {
       let aVal = a[orderSortBy];
       let bVal = b[orderSortBy];
-
       if (orderSortBy === "orderDate" || orderSortBy === "createdAt") {
         aVal = safeDate(aVal);
         bVal = safeDate(bVal);
       }
-
       return compareValues(aVal, bVal, orderSortOrder);
     });
+  }, [orders, statusFilter, orderSearch, orderSortBy, orderSortOrder]);
 
-    return sorted;
-  }, [orders, statusFilter, orderSortBy, orderSortOrder]);
-
-  // -------------------------
-  // Processed Transactions
-  // -------------------------
   const processedTransactions = useMemo(() => {
-    const sorted = [...transactions].sort((a, b) => {
+    const q = txSearch.toLowerCase();
+    const filtered = transactions.filter((tx) => {
+      if (!q) return true;
+      return (tx.id || "").toLowerCase().includes(q) || String(tx.amount || "").includes(q);
+    });
+    return [...filtered].sort((a, b) => {
       let aVal = a[txSortBy];
       let bVal = b[txSortBy];
-
       if (txSortBy === "transactionDateTime") {
         aVal = safeDate(aVal);
         bVal = safeDate(bVal);
       }
-
       return compareValues(aVal, bVal, txSortOrder);
     });
+  }, [transactions, txSearch, txSortBy, txSortOrder]);
 
-    return sorted;
-  }, [transactions, txSortBy, txSortOrder]);
+  const processedBanLogs = useMemo(() => {
+    const q = banSearch.toLowerCase();
+    if (!q) return banLogs;
+    return banLogs.filter(
+      (b) =>
+        (b.banReason || "").toLowerCase().includes(q) ||
+        String(b.userBanLogId || "").includes(q) ||
+        String(b.bannedBy || "").toLowerCase().includes(q)
+    );
+  }, [banLogs, banSearch]);
 
   // -------------------------
-  // Table Column Definitions
+  // Column Definitions
   // -------------------------
   const inventoryColumns = useMemo(
     () => [
+      {
+        key: "itemId",
+        label: "Item ID",
+        render: (row) => (
+          <Typography fontWeight={600}>#{row.itemId || "N/A"}</Typography>
+        ),
+      },
       {
         key: "itemName",
         label: "Item Name",
@@ -268,117 +292,130 @@ const UserProfilePage = () => {
       {
         key: "quantity",
         label: "Quantity",
-      },
-      {
-        key: "obtainedDate",
-        label: "Obtained Date",
-        render: (row) =>
-          row.obtainedDate
-            ? new Date(row.obtainedDate).toLocaleDateString()
-            : "N/A",
+        render: (row) => (
+          <Typography fontWeight={500}>
+            {row.quantity?.toLocaleString() || "0"}
+          </Typography>
+        ),
       },
     ],
     []
   );
 
-  const orderColumns = useMemo(
-    () => [
-      {
-        key: "shopOrderId",
-        label: "Order ID",
-        sortable: true,
-        render: (row) => `#${row.shopOrderId}`,
-      },
-      {
-        key: "totalAmount",
-        label: "Amount",
-        sortable: true,
-        align: "right",
-        render: (row) => (
-          <Typography fontWeight={700}>
-            {(row.totalAmount || 0).toLocaleString()} VND
-          </Typography>
-        ),
-      },
-      {
-        key: "status",
-        label: "Status",
-        render: (row) => (
-          <Chip
-            label={row.status || "N/A"}
-            size="small"
-            color={getStatusColor(row.status)}
-            variant="soft"
-          />
-        ),
-      },
-      {
-        key: "orderDate",
-        label: "Date",
-        sortable: true,
-        render: (row) =>
-          row.orderDate ? new Date(row.orderDate).toLocaleDateString() : "N/A",
-      },
-    ],
-    []
-  );
+  const orderColumns = useMemo(() => [
+    {
+      key: "shopOrderId",
+      label: "Order ID",
+      sortable: true,
+      render: (row) => (
+        <Typography variant="body2" fontWeight={600}>#{row.shopOrderId}</Typography>
+      ),
+    },
+    {
+      key: "totalAmount",
+      label: "Amount",
+      sortable: true,
+      align: "left",
+      render: (row) => (
+        <Typography variant="body2" fontWeight={700}>
+          {(row.totalAmount || 0).toLocaleString()} VND
+        </Typography>
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (row) => (
+        <Chip label={row.status || "N/A"} size="small" color={getStatusColor(row.status)} variant="soft" />
+      ),
+    },
+    {
+      key: "orderDate",
+      label: "Date",
+      sortable: true,
+      render: (row) => row.orderDate ? new Date(row.orderDate).toLocaleDateString() : "N/A",
+    },
+  ], []);
 
-  const transactionColumns = useMemo(
-    () => [
-      {
-        key: "id",
-        label: "ID",
-        render: (row) => (
-          <Typography
-            sx={{
-              fontWeight: 600,
-              maxWidth: 150,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {row.id || "N/A"}
-          </Typography>
+  const transactionColumns = useMemo(() => [
+    {
+      key: "id",
+      label: "Transaction ID",
+      render: (row) => (
+        <Typography
+          variant="caption"
+          sx={{ fontWeight: 600, maxWidth: 160, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+        >
+          {row.id || "N/A"}
+        </Typography>
+      ),
+    },
+    {
+      key: "amount",
+      label: "Amount",
+      sortable: true,
+      align: "left",
+      render: (row) => (
+        <Typography variant="body2" fontWeight={700}>
+          {(row.amount || 0).toLocaleString()} VND
+        </Typography>
+      ),
+    },
+    {
+      key: "transactionDateTime",
+      label: "Date & Time",
+      sortable: true,
+      render: (row) => row.transactionDateTime ? new Date(row.transactionDateTime).toLocaleString() : "N/A",
+    },
+  ], []);
+
+  const banLogColumns = useMemo(() => [
+    {
+      key: "userBanLogId",
+      label: "ID",
+      render: (row) => (
+        <Typography variant="caption" fontWeight={600}>#{row.userBanLogId}</Typography>
+      ),
+    },
+    {
+      key: "banReason",
+      label: "Reason",
+      render: (row) => (
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>{row.banReason || "N/A"}</Typography>
+      ),
+    },
+    {
+      key: "bannedDate",
+      label: "Banned Date",
+      sortable: true,
+      render: (row) => row.bannedDate ? new Date(row.bannedDate).toLocaleString() : "N/A",
+    },
+    {
+      key: "bannedUntil",
+      label: "Banned Until",
+      sortable: true,
+      render: (row) =>
+        row.bannedUntil ? (
+          <Chip label={new Date(row.bannedUntil).toLocaleString()} size="small" color="error" variant="outlined" />
+        ) : (
+          <Chip label="Indefinite" size="small" color="error" />
         ),
-      },
-      {
-        key: "amount",
-        label: "Amount",
-        sortable: true,
-        align: "right",
-        render: (row) => (
-          <Typography fontWeight={700}>
-            {(row.amount || 0).toLocaleString()} VND
-          </Typography>
-        ),
-      },
-      {
-        key: "transactionDateTime",
-        label: "Date",
-        sortable: true,
-        render: (row) =>
-          row.transactionDateTime
-            ? new Date(row.transactionDateTime).toLocaleString()
-            : "N/A",
-      },
-    ],
-    []
-  );
+    },
+    {
+      key: "bannedBy",
+      label: "Staff ID",
+      render: (row) => (
+        <Typography variant="caption" fontWeight={600}>{row.bannedBy ?? "N/A"}</Typography>
+      ),
+    },
+  ], []);
 
   // -------------------------
   // Loading / Missing
   // -------------------------
   if (loading) {
     return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "80vh",
-        }}
-      >
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "80vh" }}>
         <CircularProgress />
       </Box>
     );
@@ -387,10 +424,7 @@ const UserProfilePage = () => {
   if (!profile || !user) {
     return (
       <Box sx={{ p: 3 }}>
-        <PageHeader
-          title="User Not Found"
-          breadcrumbs={[{ label: "Users", path: "/users" }]}
-        />
+        <PageHeader title="User Not Found" breadcrumbs={[{ label: "Users", path: "/users" }]} />
         <Typography variant="h5" color="error" sx={{ mt: 2 }}>
           User profile data is missing or inaccessible.
         </Typography>
@@ -398,8 +432,10 @@ const UserProfilePage = () => {
     );
   }
 
-  const isBanned =
-    user.bannedUntil && new Date(user.bannedUntil).getTime() > Date.now();
+  const isBanned = user.bannedUntil && new Date(user.bannedUntil).getTime() > Date.now();
+
+  const ROW1_HEIGHT = 320;
+  const ROW2_HEIGHT = 500;
 
   return (
     <Box>
@@ -409,181 +445,166 @@ const UserProfilePage = () => {
         breadcrumbs={[{ label: "Users", path: "/users" }, { label: fullName }]}
       />
 
-      <Grid container spacing={3}>
-        {/* Profile Card */}
-        <Grid item xs={12}>
-          <Card sx={{ p: 4, borderRadius: 3, position: "relative", overflow: "hidden" }}>
-            <Box
+      {/* Outer container: 2 rows stacked vertically, full width */}
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+
+        {/* ======== ROW 1: Profile (65%) + Inventory (35%) ======== */}
+        <Box sx={{ display: "flex", gap: 3 }}>
+
+          {/* Profile Card — 65% */}
+          <Box sx={{ flex: "0 0 65%", minWidth: 0 }}>
+            <Card
               sx={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: 120,
-                bgcolor: alpha(theme.palette.primary.main, 0.08),
+                p: 4,
+                borderRadius: 3,
+                position: "relative",
+                overflow: "hidden",
+                height: ROW1_HEIGHT,
               }}
-            />
-
-            <Stack
-              direction={{ xs: "column", md: "row" }}
-              spacing={4}
-              sx={{ position: "relative", pt: 4 }}
             >
-              <Avatar
-                src={user.avatarUrl}
+              <Box
                 sx={{
-                  width: 140,
-                  height: 140,
-                  border: "4px solid white",
-                  boxShadow: theme.shadows[3],
-                  bgcolor: "primary.main",
-                  fontSize: "3rem",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: 120,
+                  bgcolor: alpha(theme.palette.primary.main, 0.08),
                 }}
-              >
-                {user.firstName ? user.firstName[0].toUpperCase() : "U"}
-              </Avatar>
-
-              <Box sx={{ flexGrow: 1, pt: { xs: 0, md: 4 } }}>
-                <Typography variant="h2" fontWeight="800" gutterBottom>
-                  {fullName}
-                </Typography>
-
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <UserIcon color="action" fontSize="small" />
-                      <Typography variant="body1" fontWeight="600">
-                        {user.userName || "N/A"}
-                      </Typography>
-                    </Stack>
-                  </Grid>
-
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <EmailIcon color="action" fontSize="small" />
-                      <Typography variant="body1">{user.email || "N/A"}</Typography>
-                    </Stack>
-                  </Grid>
-
-                  <Grid item xs={12} sm={6} md={4}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <DateIcon color="action" fontSize="small" />
-                      <Typography variant="body2" color="text.secondary">
-                        ID: {user.userId}
-                      </Typography>
-                    </Stack>
-                  </Grid>
-                </Grid>
-              </Box>
-
-              <Box sx={{ pt: { xs: 0, md: 4 }, textAlign: "right" }}>
-                <Chip
-                  label={isBanned ? "Banned" : "Active"}
-                  color={isBanned ? "error" : "success"}
-                  sx={{ fontWeight: 700, px: 2 }}
-                />
-              </Box>
-            </Stack>
-          </Card>
-        </Grid>
-
-        {/* Inventory */}
-        <Grid item xs={12}>
-          <Accordion
-            defaultExpanded
-            sx={{
-              borderRadius: 2,
-              "&:before": { display: "none" },
-              boxShadow: "0 8px 16px 0 rgba(145, 158, 171, 0.16)",
-            }}
-          >
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Stack direction="row" spacing={1.5} alignItems="center">
-                <InventoryIcon color="primary" />
-                <Typography variant="h6" fontWeight="700">
-                  User Inventory
-                </Typography>
-                <Chip label={inventory.length} size="small" color="primary" />
-              </Stack>
-            </AccordionSummary>
-
-            <AccordionDetails sx={{ px: 0, pt: 0 }}>
-              <SortableTable
-                columns={inventoryColumns}
-                rows={inventory}
-                sortBy={null}
-                sortOrder={null}
-                onSort={() => {}}
-                emptyText="No items in inventory"
-                maxHeight={300}
               />
-            </AccordionDetails>
-          </Accordion>
-        </Grid>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={4} sx={{ position: "relative", pt: 4 }}>
+                <Avatar
+                  src={user.avatarUrl}
+                  sx={{
+                    width: 130,
+                    height: 130,
+                    border: "4px solid white",
+                    boxShadow: theme.shadows[3],
+                    bgcolor: "primary.main",
+                    fontSize: "3rem",
+                    flexShrink: 0,
+                  }}
+                >
+                  {user.firstName ? user.firstName[0].toUpperCase() : "U"}
+                </Avatar>
 
-        {/* Orders + Transactions Tabs */}
-        <Grid item xs={12}>
-          <Card
-            sx={{
-              borderRadius: 2,
-              boxShadow: "0 8px 16px 0 rgba(145, 158, 171, 0.16)",
-              overflow: "hidden",
-            }}
-          >
-            {/* Tab Header */}
-            <Box sx={{ px: 2.5, pt: 2 }}>
-              <Tabs
-                value={activeTab}
-                onChange={(e, newValue) => setActiveTab(newValue)}
-                variant="scrollable"
-                scrollButtons="auto"
-              >
-                <Tab
-                  label={
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <OrderIcon fontSize="small" />
-                      <Typography fontWeight={700}>Purchase Orders</Typography>
-                      <Chip label={processedOrders.length} size="small" color="info" />
-                    </Stack>
-                  }
+                <Box sx={{ flexGrow: 1, pt: { xs: 0, sm: 4 } }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1} mb={1.5}>
+                    <Typography variant="h4" fontWeight={800}>{fullName}</Typography>
+                    <Chip
+                      label={isBanned ? "Banned" : "Active"}
+                      color={isBanned ? "error" : "success"}
+                      sx={{ fontWeight: 700, px: 1 }}
+                    />
+                  </Stack>
+                  <Grid container spacing={1.5}>
+                    <Grid item xs={12} sm={6}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <UserIcon color="action" fontSize="small" />
+                        <Typography variant="body2" fontWeight={600}>{user.userName || "N/A"}</Typography>
+                      </Stack>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <EmailIcon color="action" fontSize="small" />
+                        <Typography variant="body2">{user.email || "N/A"}</Typography>
+                      </Stack>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <DateIcon color="action" fontSize="small" />
+                        <Typography variant="body2" color="text.secondary">User ID: {user.userId}</Typography>
+                      </Stack>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Stack>
+            </Card>
+          </Box>
+
+          {/* Inventory — remaining 35% */}
+          <Box sx={{ flex: "1 1 0%", minWidth: 0 }}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                height: ROW1_HEIGHT,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
+              <Box sx={{ px: 2.5, pt: 2, pb: 1.5, flexShrink: 0 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <InventoryIcon color="primary" fontSize="small" />
+                    <Typography variant="h6" fontWeight={700}>Inventory</Typography>
+                    <Chip label={processedInventory.length} size="small" color="primary" />
+                  </Stack>
+                  <SearchBar value={inventorySearch} onChange={setInventorySearch} placeholder="Search items..." />
+                </Stack>
+              </Box>
+              <Divider sx={{ borderStyle: "dashed" }} />
+              <TableContainer sx={{ flexGrow: 1, overflowY: "auto" }}>
+                <SortableTable
+                  columns={inventoryColumns}
+                  rows={processedInventory}
+                  sortBy={null}
+                  sortOrder={null}
+                  onSort={() => {}}
+                  emptyText="No items in inventory"
                 />
-                <Tab
-                  label={
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <TransactionIcon fontSize="small" />
-                      <Typography fontWeight={700}>Transaction History</Typography>
-                      <Chip
-                        label={processedTransactions.length}
-                        size="small"
-                        color="warning"
-                      />
-                    </Stack>
-                  }
-                />
-              </Tabs>
-            </Box>
+              </TableContainer>
+            </Card>
+          </Box>
 
-            <Divider sx={{ borderStyle: "dashed" }} />
+        </Box>
 
-            {/* Tab Content */}
-            <Box sx={{ p: 2.5 }}>
-              {/* Orders */}
-              {activeTab === 0 && (
-                <>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      mb: 2,
-                    }}
-                  >
-                    <FormControl size="small" sx={{ minWidth: 160 }}>
+        {/* ======== ROW 2: Tabs (65%) + Ban Logs (35%) ======== */}
+        <Box sx={{ display: "flex", gap: 3 }}>
+
+          {/* Orders + Transactions Tabs — 65% */}
+          <Box sx={{ flex: "0 0 65%", minWidth: 0 }}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                height: ROW2_HEIGHT,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
+              <Box sx={{ px: 2.5, pt: 2, flexShrink: 0 }}>
+                <Tabs value={activeTab} onChange={(_e, v) => setActiveTab(v)} variant="scrollable" scrollButtons="auto">
+                  <Tab
+                    label={
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <OrderIcon fontSize="small" />
+                        <span style={{ fontWeight: 700 }}>Purchase Orders</span>
+                        <Chip label={orders.length} size="small" color="info" />
+                      </Stack>
+                    }
+                  />
+                  <Tab
+                    label={
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <TransactionIcon fontSize="small" />
+                        <span style={{ fontWeight: 700 }}>Transactions</span>
+                        <Chip label={transactions.length} size="small" color="warning" />
+                      </Stack>
+                    }
+                  />
+                </Tabs>
+              </Box>
+              <Divider sx={{ borderStyle: "dashed" }} />
+
+              {/* Search/filter bar — fixed, doesn't scroll */}
+              <Box sx={{ px: 2.5, pt: 2, pb: 1, flexShrink: 0 }}>
+                {activeTab === 0 && (
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} justifyContent="flex-end">
+                    <SearchBar value={orderSearch} onChange={setOrderSearch} placeholder="Search orders..." />
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
                       <InputLabel>Status</InputLabel>
-                      <Select
-                        value={statusFilter}
-                        label="Status"
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                      >
+                      <Select value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
                         <MenuItem value="all">All Status</MenuItem>
                         <MenuItem value="paid">Paid</MenuItem>
                         <MenuItem value="pending">Pending</MenuItem>
@@ -591,52 +612,79 @@ const UserProfilePage = () => {
                         <MenuItem value="cancelled">Cancelled</MenuItem>
                       </Select>
                     </FormControl>
-                  </Box>
+                  </Stack>
+                )}
+                {activeTab === 1 && (
+                  <Stack direction="row" justifyContent="flex-end">
+                    <SearchBar value={txSearch} onChange={setTxSearch} placeholder="Search transactions..." />
+                  </Stack>
+                )}
+              </Box>
 
+              {/* Scrollable table */}
+              <TableContainer sx={{ flexGrow: 1, overflowY: "auto" }}>
+                {activeTab === 0 && (
                   <SortableTable
                     columns={orderColumns}
                     rows={processedOrders}
                     sortBy={orderSortBy}
                     sortOrder={orderSortOrder}
-                    onSort={(key) =>
-                      handleSortToggle(
-                        key,
-                        orderSortBy,
-                        orderSortOrder,
-                        setOrderSortBy,
-                        setOrderSortOrder
-                      )
-                    }
+                    onSort={(key) => handleSortToggle(key, orderSortBy, orderSortOrder, setOrderSortBy, setOrderSortOrder)}
                     emptyText="No orders found"
-                    maxHeight={420}
                   />
-                </>
-              )}
+                )}
+                {activeTab === 1 && (
+                  <SortableTable
+                    columns={transactionColumns}
+                    rows={processedTransactions}
+                    sortBy={txSortBy}
+                    sortOrder={txSortOrder}
+                    onSort={(key) => handleSortToggle(key, txSortBy, txSortOrder, setTxSortBy, setTxSortOrder)}
+                    emptyText="No transactions found"
+                  />
+                )}
+              </TableContainer>
+            </Card>
+          </Box>
 
-              {/* Transactions */}
-              {activeTab === 1 && (
+          {/* Ban Logs — remaining 35% */}
+          <Box sx={{ flex: "1 1 0%", minWidth: 0 }}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                height: ROW2_HEIGHT,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
+              <Box sx={{ px: 2.5, pt: 2, pb: 1.5, flexShrink: 0 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <GavelIcon color="error" fontSize="small" />
+                    <Typography variant="h6" fontWeight={700}>Ban History</Typography>
+                    <Chip label={processedBanLogs.length} size="small" color="error" />
+                  </Stack>
+                  <SearchBar value={banSearch} onChange={setBanSearch} placeholder="Search bans..." />
+                </Stack>
+              </Box>
+              <Divider sx={{ borderStyle: "dashed" }} />
+              <TableContainer sx={{ flexGrow: 1, overflowY: "auto" }}>
                 <SortableTable
-                  columns={transactionColumns}
-                  rows={processedTransactions}
-                  sortBy={txSortBy}
-                  sortOrder={txSortOrder}
-                  onSort={(key) =>
-                    handleSortToggle(
-                      key,
-                      txSortBy,
-                      txSortOrder,
-                      setTxSortBy,
-                      setTxSortOrder
-                    )
-                  }
-                  emptyText="No transactions found"
-                  maxHeight={420}
+                  columns={banLogColumns}
+                  rows={processedBanLogs}
+                  sortBy={null}
+                  sortOrder={null}
+                  onSort={() => {}}
+                  emptyText="No ban history found"
                 />
-              )}
-            </Box>
-          </Card>
-        </Grid>
-      </Grid>
+              </TableContainer>
+            </Card>
+          </Box>
+
+        </Box>
+
+      </Box>
     </Box>
   );
 };

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import {
     Box,
     Button,
@@ -30,6 +30,7 @@ const ShopPage = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [openModal, setOpenModal] = useState(false);
+    const [openDeleteModal, setOpenDeleteModal] = useState(false);
     const [currentEntity, setCurrentEntity] = useState(null);
     const [items, setItems] = useState([]);
 
@@ -51,7 +52,16 @@ const ShopPage = () => {
         skinAndCharacterBundleId: '',
         itemId: '',
         quantity: 1,
-        imageUrl: ''
+        imageUrl: '',
+        status: 'Available'
+    });
+
+    const [filters, setFilters] = useState({
+        Search: '',
+        MinPrice: '',
+        MaxPrice: '',
+        Status: '',
+        ItemId: ''
     });
 
     const [uploading, setUploading] = useState(false);
@@ -65,19 +75,18 @@ const ShopPage = () => {
     const actionsColumn = {
         id: 'actions',
         label: 'Actions',
-        width: 80,        
-        minWidth: 80,   
-        maxWidth: 120,
+        width: 120,        
+        minWidth: 120,   
+        maxWidth: 160,
         flex: 0,
         align: 'center',
         render: (row) => (
             <Box
                 sx={{
                     display: 'flex',
-                    gap: 1,
+                    gap: 0.5,
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '110%'
+                    justifyContent: 'center'
                 }}
             >
                 <Tooltip title="Detail">
@@ -98,6 +107,21 @@ const ShopPage = () => {
                     </IconButton>
                 </Tooltip>
             </Box>
+        )
+    };
+
+    const statusColumn = {
+        id: 'status',
+        label: 'Status',
+        minWidth: 100,
+        render: (row) => (
+            <Chip 
+                label={row.status} 
+                size="small"
+                color={row.status === 'Available' ? 'success' : 'default'}
+                onClick={() => handleToggleStatus(row)}
+                sx={{ cursor: 'pointer' }}
+            />
         )
     };
 
@@ -126,6 +150,7 @@ const ShopPage = () => {
                 render: (row) => itemMap[row.itemId] || `Item #${row.itemId}`
             },
             { id: 'quantity', label: 'Quantity', minWidth: 80 },
+            statusColumn,
             actionsColumn,
         ],
         1: [
@@ -152,6 +177,7 @@ const ShopPage = () => {
                 render: (row) => itemMap[row.itemId] || `Item #${row.itemId}`
             },
             { id: 'quantity', label: 'Quantity', minWidth: 80 },
+            statusColumn,
             actionsColumn,
         ]
     };
@@ -159,14 +185,36 @@ const ShopPage = () => {
     const fetchData = async (tab) => {
         setLoading(true);
         try {
+            const queryParams = {
+                Search: filters.Search || undefined,
+                MinPrice: filters.MinPrice || undefined,
+                MaxPrice: filters.MaxPrice || undefined,
+                Status: filters.Status || undefined,
+                ItemId: filters.ItemId || undefined
+            };
+            
             let res;
-            if (tab === 0) res = await shopService.getGemBundles();
-            else res = await shopService.getSkinBundles();
+            if (tab === 0) res = await shopService.getGemBundles(queryParams);
+            else res = await shopService.getSkinBundles(queryParams);
             setData(res.data);
         } catch (error) {
             console.error('Failed to fetch shop data', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleToggleStatus = async (row) => {
+        try {
+            const newStatus = row.status === 'Available' ? 'Unavailable' : 'Available';
+            if (tabValue === 0) {
+                await shopService.updateGemBundleStatus(row.gemBundleId, newStatus);
+            } else {
+                await shopService.updateSkinBundleStatus(row.skinAndCharacterBundleId, newStatus);
+            }
+            fetchData(tabValue);
+        } catch (error) {
+            console.error('Failed to update status', error);
         }
     };
 
@@ -181,8 +229,11 @@ const ShopPage = () => {
 
     useEffect(() => {
         fetchData(tabValue);
+    }, [tabValue, filters]);
+
+    useEffect(() => {
         fetchItems();
-    }, [tabValue]);
+    }, []);
 
     const handleCreate = () => {
         setCurrentEntity(null);
@@ -192,7 +243,8 @@ const ShopPage = () => {
             skinAndCharacterBundleId: '',
             itemId: '',
             quantity: 1,
-            imageUrl: ''
+            imageUrl: '',
+            status: 'Available'
         });
         setUploadError(null);
         setOpenModal(true);
@@ -205,21 +257,33 @@ const ShopPage = () => {
             bundlePrice: entity.bundlePrice,
             itemId: entity.itemId || '',
             quantity: entity.quantity || 1,
-            imageUrl: entity.imageUrl || ''
+            imageUrl: entity.imageUrl || '',
+            status: entity.status || 'Available'
         });
         setUploadError(null);
         setOpenModal(true);
     };
 
-    const handleDelete = async (entity) => {
-        if (window.confirm('Are you sure you want to delete this?')) {
-            try {
-                if (tabValue === 0) await shopService.deleteGemBundle(entity.gemBundleId);
-                else await shopService.deleteSkinBundle(entity.skinAndCharacterBundleId);
-                fetchData(tabValue);
-            } catch (error) {
-                console.error('Failed to delete', error);
-            }
+    const handleDelete = (entity) => {
+        setCurrentEntity(entity);
+        setFormData({
+            bundleName: entity.bundleName,
+            bundlePrice: entity.bundlePrice,
+            itemId: entity.itemId || '',
+            quantity: entity.quantity || 1,
+            imageUrl: entity.imageUrl || ''
+        });
+        setOpenDeleteModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            if (tabValue === 0) await shopService.deleteGemBundle(currentEntity.gemBundleId);
+            else await shopService.deleteSkinBundle(currentEntity.skinAndCharacterBundleId);
+            setOpenDeleteModal(false);
+            fetchData(tabValue);
+        } catch (error) {
+            console.error('Failed to delete', error);
         }
     };
 
@@ -333,6 +397,13 @@ const ShopPage = () => {
         setFormData(prev => ({ ...prev, imageUrl: '' }));
     };
 
+    const handleFilterChange = (field, value) => {
+        setFilters(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
     // Utility to return id label & value for entity (works for both bundle types)
     const getEntityIdInfo = (entity) => {
         if (!entity) return { idLabel: 'ID', idValue: null };
@@ -347,6 +418,77 @@ const ShopPage = () => {
                 <Typography variant="h4">Shop</Typography>
                 <Button variant="contained" onClick={handleCreate}>Create Entry</Button>
             </Box>
+
+            {/* Filter UI */}
+            <Box sx={{ 
+                mb: 3, 
+                p: 2, 
+                bgcolor: 'rgba(255,255,255,0.05)', 
+                borderRadius: 2,
+                display: 'flex',
+                gap: 2,
+                flexWrap: 'wrap',
+                alignItems: 'center'
+            }}>
+                <TextField
+                    size="small"
+                    label="Search"
+                    value={filters.Search}
+                    onChange={(e) => handleFilterChange('Search', e.target.value)}
+                    sx={{ width: 200 }}
+                />
+                <TextField
+                    size="small"
+                    label="Min Price"
+                    type="number"
+                    value={filters.MinPrice}
+                    onChange={(e) => handleFilterChange('MinPrice', e.target.value)}
+                    sx={{ width: 120 }}
+                />
+                <TextField
+                    size="small"
+                    label="Max Price"
+                    type="number"
+                    value={filters.MaxPrice}
+                    onChange={(e) => handleFilterChange('MaxPrice', e.target.value)}
+                    sx={{ width: 120 }}
+                />
+                <TextField
+                    select
+                    size="small"
+                    label="Item"
+                    value={filters.ItemId}
+                    onChange={(e) => handleFilterChange('ItemId', e.target.value)}
+                    sx={{ width: 150 }}
+                >
+                    <MenuItem value="">All Items</MenuItem>
+                    {items.map(item => (
+                        <MenuItem key={item.itemId} value={item.itemId}>
+                            {item.itemName}
+                        </MenuItem>
+                    ))}
+                </TextField>
+                <TextField
+                    select
+                    size="small"
+                    label="Status"
+                    value={filters.Status}
+                    onChange={(e) => handleFilterChange('Status', e.target.value)}
+                    sx={{ width: 120 }}
+                >
+                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="Available">Available</MenuItem>
+                    <MenuItem value="Unavailable">Unavailable</MenuItem>
+                </TextField>
+                <Button 
+                    variant="outlined" 
+                    size="small" 
+                    onClick={() => setFilters({ Search: '', MinPrice: '', MaxPrice: '', Status: '', ItemId: '' })}
+                >
+                    Clear Filters
+                </Button>
+            </Box>
+
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                 <Tabs value={tabValue} onChange={handleTabChange} aria-label="shop tabs">
                     <Tab label="Gem Bundles" />
@@ -362,7 +504,7 @@ const ShopPage = () => {
                 <DataTable
                     columns={columnsMap[tabValue]}
                     data={data}
-                    searchPlaceholder="Search shop data..."
+                    hideSearch // We are using our own filter UI
                 />
             )}
 
@@ -410,6 +552,18 @@ const ShopPage = () => {
                         value={formData.quantity}
                         onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
                     />
+
+                    <TextField
+                        select
+                        margin="dense"
+                        label="Status"
+                        fullWidth
+                        value={formData.status}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    >
+                        <MenuItem value="Available">Available</MenuItem>
+                        <MenuItem value="Unavailable">Unavailable</MenuItem>
+                    </TextField>
 
                     {/* File upload UI */}
                     <Box sx={{ mt: 1 }}>
@@ -470,6 +624,70 @@ const ShopPage = () => {
                 <DialogActions>
                     <Button onClick={() => setOpenModal(false)}>Cancel</Button>
                     <Button onClick={handleSave} disabled={uploading}>Save</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={openDeleteModal} onClose={() => setOpenDeleteModal(false)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ color: 'error.main' }}>
+                    Delete {tabValue === 0 ? 'Gem Bundle' : 'Skin Bundle'}
+                </DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
+                        Are you sure you want to delete this bundle? This action cannot be undone.
+                    </Typography>
+                    <TextField
+                        margin="dense"
+                        label="Bundle Name"
+                        fullWidth
+                        value={formData.bundleName}
+                        InputProps={{ readOnly: true }}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Price"
+                        type="number"
+                        fullWidth
+                        value={formData.bundlePrice}
+                        InputProps={{ readOnly: true }}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Item"
+                        fullWidth
+                        value={itemMap[formData.itemId] || (formData.itemId ? `Item #${formData.itemId}` : 'None')}
+                        InputProps={{ readOnly: true }}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Quantity"
+                        type="number"
+                        fullWidth
+                        value={formData.quantity}
+                        InputProps={{ readOnly: true }}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Status"
+                        fullWidth
+                        value={formData.status}
+                        InputProps={{ readOnly: true }}
+                    />
+
+                    {formData.imageUrl && (
+                        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+                            <Box
+                                component="img"
+                                src={formData.imageUrl}
+                                alt="preview"
+                                sx={{ width: 160, height: 160, objectFit: 'contain', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}
+                            />
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDeleteModal(false)}>Cancel</Button>
+                    <Button onClick={handleConfirmDelete} color="error" variant="contained">Delete</Button>
                 </DialogActions>
             </Dialog>
 

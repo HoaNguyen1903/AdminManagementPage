@@ -138,13 +138,27 @@ const DataTable = ({
                     <TableBody>
                         {paginatedData.map((row, index) => {
                             return (
-                                <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+                                <TableRow
+                                    hover
+                                    role="checkbox"
+                                    tabIndex={-1}
+                                    key={index}
+                                    onClick={() => {
+                                        if (window.getSelection().toString()) return;
+                                        onView && onView(row);
+                                    }} sx={{
+                                        cursor: onView ? 'pointer' : 'default',
+                                        '&:hover': {
+                                            bgcolor: alpha(theme.palette.primary.main, 0.04) + ' !important'
+                                        }
+                                    }}
+                                >
                                     {columns.map((column) => {
                                         const value = row[column.id];
                                         return (
                                             <TableCell key={column.id} align={column.align} sx={{ fontSize: '0.875rem' }}>
-                                                {column.render 
-                                                    ? column.render(row) 
+                                                {column.render
+                                                    ? column.render(row)
                                                     : column.format
                                                         ? column.format(value)
                                                         : value}
@@ -155,17 +169,38 @@ const DataTable = ({
                                         <TableCell align="right">
                                             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
                                                 {onView && (
-                                                    <IconButton onClick={() => onView(row)} size="small" sx={{ color: 'primary.main' }}>
+                                                    <IconButton
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onView(row);
+                                                        }}
+                                                        size="small"
+                                                        sx={{ color: 'primary.main' }}
+                                                    >
                                                         <ViewIcon fontSize="small" />
                                                     </IconButton>
                                                 )}
                                                 {onEdit && (
-                                                    <IconButton onClick={() => onEdit(row)} size="small" sx={{ color: 'info.main' }}>
+                                                    <IconButton
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onEdit(row);
+                                                        }}
+                                                        size="small"
+                                                        sx={{ color: 'info.main' }}
+                                                    >
                                                         <EditIcon fontSize="small" />
                                                     </IconButton>
                                                 )}
                                                 {onDelete && (
-                                                    <IconButton onClick={() => onDelete(row)} size="small" sx={{ color: 'error.main' }}>
+                                                    <IconButton
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onDelete(row);
+                                                        }}
+                                                        size="small"
+                                                        sx={{ color: 'error.main' }}
+                                                    >
                                                         <DeleteIcon fontSize="small" />
                                                     </IconButton>
                                                 )}

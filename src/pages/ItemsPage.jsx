@@ -12,6 +12,7 @@ import {
     IconButton,
     Tooltip,
     Avatar,
+    Chip,
     LinearProgress
 } from '@mui/material';
 import {
@@ -28,6 +29,7 @@ import api from '../api/axiosConfig';
 const ItemsPage = () => {
     const [items, setItems] = useState([]);
     const [openModal, setOpenModal] = useState(false);
+    const [openDeleteModal, setOpenDeleteModal] = useState(false);
     const [currentItem, setCurrentItem] = useState(null);
 
     const [openDetail, setOpenDetail] = useState(false);
@@ -41,12 +43,24 @@ const ItemsPage = () => {
         itemName: '',
         itemDescription: '',
         itemType: 'Character',
-        itemImageUrl: ''
+        itemImageUrl: '',
+        status: 'Available'
+    });
+
+    const [filters, setFilters] = useState({
+        Search: '',
+        ItemType: '',
+        Status: ''
     });
 
     const fetchItems = async () => {
         try {
-            const res = await itemService.getAll();
+            const queryParams = {
+                Search: filters.Search || undefined,
+                ItemType: filters.ItemType || undefined,
+                Status: filters.Status || undefined
+            };
+            const res = await itemService.getAll(queryParams);
             setItems(res.data);
         } catch (err) {
             console.error(err);
@@ -55,7 +69,7 @@ const ItemsPage = () => {
 
     useEffect(() => {
         fetchItems();
-    }, []);
+    }, [filters]);
 
     // ===== Upload =====
     const uploadFile = async (file) => {
@@ -126,21 +140,44 @@ const ItemsPage = () => {
             itemName: '',
             itemDescription: '',
             itemType: 'Character',
-            itemImageUrl: ''
+            itemImageUrl: '',
+            status: 'Available'
         });
         setOpenModal(true);
     };
 
     const handleEdit = (item) => {
         setCurrentItem(item);
-        setFormData(item);
+        setFormData({
+            ...item,
+            status: item.status || 'Available'
+        });
         setOpenModal(true);
     };
 
-    const handleDelete = async (item) => {
-        if (window.confirm('Delete this item?')) {
-            await itemService.delete(item.itemId);
+    const handleToggleStatus = async (row) => {
+        try {
+            const newStatus = row.status === 'Available' ? 'Unavailable' : 'Available';
+            await itemService.updateStatus(row.itemId, newStatus);
             fetchItems();
+        } catch (error) {
+            console.error('Failed to update status', error);
+        }
+    };
+
+    const handleDelete = (item) => {
+        setCurrentItem(item);
+        setFormData(item);
+        setOpenDeleteModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            await itemService.delete(currentItem.itemId);
+            setOpenDeleteModal(false);
+            fetchItems();
+        } catch (error) {
+            console.error('Failed to delete item', error);
         }
     };
 
@@ -180,16 +217,29 @@ const ItemsPage = () => {
 
         { id: 'itemType', label: 'Type', minWidth: 100 },
         { id: 'itemDescription', label: 'Description', minWidth: 200 },
-
+        {
+            id: 'status',
+            label: 'Status',
+            minWidth: 100,
+            render: (row) => (
+                <Chip
+                    label={row.status}
+                    size="small"
+                    color={row.status === 'Available' ? 'success' : 'default'}
+                    onClick={() => handleToggleStatus(row)}
+                    sx={{ cursor: 'pointer' }}
+                />
+            )
+        },
         {
             id: 'actions',
             label: 'Actions',
             width: 120,
             align: 'center',
             render: (row) => (
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
                     <Tooltip title="Detail">
-                        <IconButton onClick={() => handleDetail(row)}>
+                        <IconButton size="small" onClick={() => handleDetail(row)}>
                             <VisibilityIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
@@ -199,7 +249,7 @@ const ItemsPage = () => {
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete">
-                        <IconButton color="error" onClick={() => handleDelete(row)}>
+                        <IconButton size="small" color="error" onClick={() => handleDelete(row)}>
                             <DeleteIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
@@ -207,6 +257,13 @@ const ItemsPage = () => {
             )
         }
     ];
+
+    const handleFilterChange = (field, value) => {
+        setFilters(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
 
     return (
         <Box>
@@ -217,7 +274,61 @@ const ItemsPage = () => {
                 </Button>
             </Box>
 
-            <DataTable columns={columns} data={items} searchPlaceholder="Search items..." />
+            {/* Filter UI */}
+            <Box sx={{
+                mb: 3,
+                p: 2,
+                bgcolor: 'rgba(255,255,255,0.05)',
+                borderRadius: 2,
+                display: 'flex',
+                gap: 2,
+                flexWrap: 'wrap',
+                alignItems: 'center'
+            }}>
+                <TextField
+                    size="small"
+                    label="Search"
+                    value={filters.Search}
+                    onChange={(e) => handleFilterChange('Search', e.target.value)}
+                    sx={{ width: 200 }}
+                />
+                <TextField
+                    select
+                    size="small"
+                    label="Type"
+                    value={filters.ItemType}
+                    onChange={(e) => handleFilterChange('ItemType', e.target.value)}
+                    sx={{ width: 150 }}
+                >
+                    <MenuItem value="">All Types</MenuItem>
+                    <MenuItem value="Character">Character</MenuItem>
+                    <MenuItem value="Skin Shard">Skin Shard</MenuItem>
+                    <MenuItem value="Gem">Gem</MenuItem>
+                </TextField>
+                <TextField
+                    select
+                    size="small"
+                    label="Status"
+                    value={filters.Status}
+                    onChange={(e) => handleFilterChange('Status', e.target.value)}
+                    sx={{ width: 120 }}
+                >
+                    <MenuItem value="">All Status</MenuItem>
+                    <MenuItem value="Available">Available</MenuItem>
+                    <MenuItem value="Unavailable">Unavailable</MenuItem>
+                    <MenuItem value="Discontinued">Discontinued</MenuItem>
+
+                </TextField>
+                <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setFilters({ Search: '', ItemType: '', Status: '' })}
+                >
+                    Clear Filters
+                </Button>
+            </Box>
+
+            <DataTable columns={columns} data={items} hideSearch />
 
             {/* CREATE / EDIT */}
             <Dialog open={openModal} onClose={() => setOpenModal(false)}>
@@ -247,6 +358,16 @@ const ItemsPage = () => {
                         <MenuItem value="Character">Character</MenuItem>
                         <MenuItem value="Skin Shard">Skin Shard</MenuItem>
                         <MenuItem value="Gem">Gem</MenuItem>
+                    </TextField>
+
+                    <TextField
+                        select fullWidth margin="dense"
+                        label="Status"
+                        value={formData.status}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    >
+                        <MenuItem value="Available">Available</MenuItem>
+                        <MenuItem value="Unavailable">Unavailable</MenuItem>
                     </TextField>
 
                     {/* Upload */}
@@ -285,6 +406,57 @@ const ItemsPage = () => {
                 <DialogActions>
                     <Button onClick={() => setOpenModal(false)}>Cancel</Button>
                     <Button onClick={handleSave}>Save</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* DELETE CONFIRMATION */}
+            <Dialog open={openDeleteModal} onClose={() => setOpenDeleteModal(false)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ color: 'error.main' }}>Delete Item</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
+                        Are you sure you want to delete this item? This action cannot be undone.
+                    </Typography>
+
+                    <TextField
+                        fullWidth margin="dense"
+                        label="Name"
+                        value={formData.itemName}
+                        InputProps={{ readOnly: true }}
+                    />
+
+                    <TextField
+                        fullWidth margin="dense"
+                        label="Description"
+                        value={formData.itemDescription}
+                        InputProps={{ readOnly: true }}
+                    />
+
+                    <TextField
+                        fullWidth margin="dense"
+                        label="Type"
+                        value={formData.itemType}
+                        InputProps={{ readOnly: true }}
+                    />
+
+                    <TextField
+                        fullWidth margin="dense"
+                        label="Status"
+                        value={formData.status}
+                        InputProps={{ readOnly: true }}
+                    />
+
+                    {formData.itemImageUrl && (
+                        <Box mt={2} textAlign="center">
+                            <img
+                                src={formData.itemImageUrl}
+                                style={{ width: 120, height: 120, objectFit: 'contain', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}
+                            />
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDeleteModal(false)}>Cancel</Button>
+                    <Button onClick={handleConfirmDelete} color="error" variant="contained">Delete</Button>
                 </DialogActions>
             </Dialog>
 

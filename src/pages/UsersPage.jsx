@@ -13,6 +13,7 @@ import {
     Alert,
     Avatar,
     Chip,
+    Divider,
     alpha,
     useTheme
 } from '@mui/material';
@@ -26,6 +27,7 @@ const UsersPage = () => {
     const theme = useTheme();
     const [users, setUsers] = useState([]);
     const [openModal, setOpenModal] = useState(false);
+    const [openDeleteModal, setOpenDeleteModal] = useState(false);
     const [openInventory, setOpenInventory] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [userItems, setUserItems] = useState([]);
@@ -35,6 +37,11 @@ const UsersPage = () => {
     const [itemMap, setItemMap] = useState({});
     const [inventoryTab, setInventoryTab] = useState(0);
     const [error, setError] = useState('');
+
+    const [banData, setBanData] = useState({
+        reason: 'Violation of terms',
+        until: ''
+    });
 
     const gemBundleMap = useMemo(() => {
         const map = {};
@@ -206,15 +213,35 @@ const UsersPage = () => {
         setOpenModal(true);
     };
 
-    const handleDelete = async (user) => {
-        const reason = window.prompt('Enter ban reason (required):', 'Violation of terms');
-        if (!reason) return;
-        const until = window.prompt('Ban until (YYYY-MM-DD or leave blank for indefinite):', '');
+    const handleDelete = (user) => {
+        setCurrentUser(user);
+        setFormData({
+            email: user.email,
+            userName: user.userName || '',
+            firstName: user.firstName,
+            lastName: user.lastName,
+            password: '',
+            banned: user.bannedUntil ? new Date(user.bannedUntil).toISOString().slice(0, 16) : '',
+            avatarUrl: user.avatarUrl || ''
+        });
+        setBanData({
+            reason: 'Violation of terms',
+            until: ''
+        });
+        setOpenDeleteModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!banData.reason) {
+            setError('Ban reason is required');
+            return;
+        }
         try {
-            await userService.ban(user.userId, {
-                banReason: reason,
-                bannedUntil: until ? new Date(until).toISOString() : null
+            await userService.ban(currentUser.userId, {
+                banReason: banData.reason,
+                bannedUntil: banData.until ? new Date(banData.until).toISOString() : null
             });
+            setOpenDeleteModal(false);
             fetchUsers();
         } catch (error) {
             console.error('Failed to ban user', error);
@@ -238,19 +265,22 @@ const UsersPage = () => {
 
     const handleSave = async () => {
         setError('');
+        console.log('Form Data to Save:', formData);
         try {
             if (currentUser) {
-                // Update: includes all fields
+                // Update: includes all fields according to working request body
                 const bannedUntilValue = formData.banned ? new Date(formData.banned).toISOString() : null;
                 const dataToSave = {
                     email: formData.email,
                     userName: formData.userName,
                     firstName: formData.firstName,
                     lastName: formData.lastName,
-                    password: formData.password, 
+                    password: formData.password || "", // Keep empty if not changed
+                    banned: bannedUntilValue ? 1 : 0, // Using 1/0 for boolean as per request body
                     bannedUntil: bannedUntilValue,
-                    banned: bannedUntilValue ? new Date(bannedUntilValue) > new Date() : false,
-                    avatarUrl: formData.avatarUrl
+                    lastOnline: currentUser.lastOnline || null,
+                    isOnline: currentUser.isOnline ? 1 : 0,
+                    avatarUrl: formData.avatarUrl || ""
                 };
                 await userService.update(currentUser.userId, dataToSave);
             } else {
@@ -340,15 +370,17 @@ const UsersPage = () => {
                         onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
                         helperText="Link to image"
                     />
-                    <TextField
-                        margin="dense"
-                        label="Password"
-                        type="password"
-                        fullWidth
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        helperText={currentUser ? "Leave blank to keep current" : "Required"}
-                    />
+                    {!currentUser && (
+                        <TextField
+                            margin="dense"
+                            label="Password"
+                            type="password"
+                            fullWidth
+                            value={formData.password}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            helperText="Required"
+                        />
+                    )}
                     {currentUser && (
                         <TextField
                             margin="dense"
@@ -364,6 +396,65 @@ const UsersPage = () => {
                 <DialogActions>
                     <Button onClick={() => setOpenModal(false)}>Cancel</Button>
                     <Button onClick={handleSave}>Save</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* BAN CONFIRMATION (DELETE ACTION) */}
+            <Dialog open={openDeleteModal} onClose={() => setOpenDeleteModal(false)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ color: 'error.main' }}>Ban User (Delete Action)</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
+                        Are you sure you want to ban this user? This is the action performed when deleting a user.
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
+                        <Avatar src={formData.avatarUrl} sx={{ width: 56, height: 56 }}>
+                            {formData.firstName?.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Box>
+                            <Typography variant="subtitle1" fontWeight="bold">
+                                {formData.firstName} {formData.lastName}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {formData.email}
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    <TextField
+                        margin="dense"
+                        label="Username"
+                        fullWidth
+                        value={formData.userName}
+                        InputProps={{ readOnly: true }}
+                    />
+
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Ban Details</Typography>
+
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Ban Reason"
+                        fullWidth
+                        required
+                        value={banData.reason}
+                        onChange={(e) => setBanData({ ...banData, reason: e.target.value })}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Ban Until"
+                        type="datetime-local"
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                        value={banData.until}
+                        onChange={(e) => setBanData({ ...banData, until: e.target.value })}
+                        helperText="Leave blank for indefinite ban"
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDeleteModal(false)}>Cancel</Button>
+                    <Button onClick={handleConfirmDelete} color="error" variant="contained">Ban User</Button>
                 </DialogActions>
             </Dialog>
 
