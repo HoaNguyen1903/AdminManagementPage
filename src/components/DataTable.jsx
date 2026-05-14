@@ -12,7 +12,8 @@ import {
     Box,
     TablePagination,
     Button,
-    TableSortLabel
+    TableSortLabel,
+    Tooltip
 } from '@mui/material';
 import {
     Visibility as ViewIcon,
@@ -29,6 +30,8 @@ const DataTable = ({
     onEdit,
     onDelete,
     viewLabel = "View",
+    editLabel = "Edit",
+    deleteLabel = "Delete",
     searchPlaceholder = "Search...",
     disableActions = false,
     hideSearch = false
@@ -80,6 +83,8 @@ const DataTable = ({
         page * rowsPerPage + rowsPerPage
     );
 
+    const showActions = !disableActions && (onView || onEdit || onDelete);
+
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden', p: 3, borderRadius: 3 }}>
             {!hideSearch && (
@@ -128,7 +133,7 @@ const DataTable = ({
                                     </TableSortLabel>
                                 </TableCell>
                             ))}
-                            {!disableActions && (
+                            {showActions && (
                                 <TableCell align="right" style={{ minWidth: 100, fontWeight: 600, fontSize: '0.8125rem', color: 'text.secondary' }}>
                                     Actions
                                 </TableCell>
@@ -165,44 +170,50 @@ const DataTable = ({
                                             </TableCell>
                                         );
                                     })}
-                                    {!disableActions && (
+                                    {showActions && (
                                         <TableCell align="right">
                                             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
                                                 {onView && (
-                                                    <IconButton
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            onView(row);
-                                                        }}
-                                                        size="small"
-                                                        sx={{ color: 'primary.main' }}
-                                                    >
-                                                        <ViewIcon fontSize="small" />
-                                                    </IconButton>
+                                                    <Tooltip title={viewLabel}>
+                                                        <IconButton
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                onView(row);
+                                                            }}
+                                                            size="small"
+                                                            sx={{ color: 'primary.main' }}
+                                                        >
+                                                            <ViewIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
                                                 )}
                                                 {onEdit && (
-                                                    <IconButton
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            onEdit(row);
-                                                        }}
-                                                        size="small"
-                                                        sx={{ color: 'info.main' }}
-                                                    >
-                                                        <EditIcon fontSize="small" />
-                                                    </IconButton>
+                                                    <Tooltip title={editLabel}>
+                                                        <IconButton
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                onEdit(row);
+                                                            }}
+                                                            size="small"
+                                                            sx={{ color: 'info.main' }}
+                                                        >
+                                                            <EditIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
                                                 )}
                                                 {onDelete && (
-                                                    <IconButton
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            onDelete(row);
-                                                        }}
-                                                        size="small"
-                                                        sx={{ color: 'error.main' }}
-                                                    >
-                                                        <DeleteIcon fontSize="small" />
-                                                    </IconButton>
+                                                    <Tooltip title={deleteLabel}>
+                                                        <IconButton
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                onDelete(row);
+                                                            }}
+                                                            size="small"
+                                                            sx={{ color: 'error.main' }}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
                                                 )}
                                             </Box>
                                         </TableCell>

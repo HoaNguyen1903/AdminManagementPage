@@ -60,7 +60,7 @@ const ShopPage = () => {
         Search: '',
         MinPrice: '',
         MaxPrice: '',
-        Status: '',
+        Status: 'Available',
         ItemId: ''
     });
 
@@ -70,44 +70,6 @@ const ShopPage = () => {
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
-    };
-
-    const actionsColumn = {
-        id: 'actions',
-        label: 'Actions',
-        width: 120,        
-        minWidth: 120,   
-        maxWidth: 160,
-        flex: 0,
-        align: 'center',
-        render: (row) => (
-            <Box
-                sx={{
-                    display: 'flex',
-                    gap: 0.5,
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}
-            >
-                <Tooltip title="Detail">
-                    <IconButton size="small" onClick={() => handleDetail(row)}>
-                        <VisibilityIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
-
-                <Tooltip title="Edit">
-                    <IconButton size="small" color="primary" onClick={() => handleEdit(row)}>
-                        <EditIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
-
-                <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => handleDelete(row)}>
-                        <DeleteIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
-            </Box>
-        )
     };
 
     const statusColumn = {
@@ -151,7 +113,6 @@ const ShopPage = () => {
             },
             { id: 'quantity', label: 'Quantity', minWidth: 80 },
             statusColumn,
-            actionsColumn,
         ],
         1: [
             { id: 'skinAndCharacterBundleId', label: 'ID', minWidth: 50 },
@@ -178,7 +139,6 @@ const ShopPage = () => {
             },
             { id: 'quantity', label: 'Quantity', minWidth: 80 },
             statusColumn,
-            actionsColumn,
         ]
     };
 
@@ -483,7 +443,7 @@ const ShopPage = () => {
                 <Button 
                     variant="outlined" 
                     size="small" 
-                    onClick={() => setFilters({ Search: '', MinPrice: '', MaxPrice: '', Status: '', ItemId: '' })}
+                    onClick={() => setFilters({ Search: '', MinPrice: '', MaxPrice: '', Status: 'Available', ItemId: '' })}
                 >
                     Clear Filters
                 </Button>
@@ -504,6 +464,10 @@ const ShopPage = () => {
                 <DataTable
                     columns={columnsMap[tabValue]}
                     data={data}
+                    onView={handleDetail}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    viewLabel="Detail"
                     hideSearch // We are using our own filter UI
                 />
             )}

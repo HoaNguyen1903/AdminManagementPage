@@ -30,7 +30,9 @@ const ItemsPage = () => {
     const [items, setItems] = useState([]);
     const [openModal, setOpenModal] = useState(false);
     const [openDeleteModal, setOpenDeleteModal] = useState(false);
+    const [openStatusModal, setOpenStatusModal] = useState(false);
     const [currentItem, setCurrentItem] = useState(null);
+    const [associatedBundles, setAssociatedBundles] = useState({ skinAndCharacterBundles: [], gemBundles: [] });
 
     const [openDetail, setOpenDetail] = useState(false);
     const [detailItem, setDetailItem] = useState(null);
@@ -50,7 +52,7 @@ const ItemsPage = () => {
     const [filters, setFilters] = useState({
         Search: '',
         ItemType: '',
-        Status: ''
+        Status: 'Available'
     });
 
     const fetchItems = async () => {
@@ -156,19 +158,47 @@ const ItemsPage = () => {
     };
 
     const handleToggleStatus = async (row) => {
+        if (row.status === 'Available') {
+            // If making it Unavailable, show warning
+            try {
+                const res = await itemService.getAssociatedBundles(row.itemId);
+                setAssociatedBundles(res.data);
+                setCurrentItem(row);
+                setOpenStatusModal(true);
+            } catch (error) {
+                console.error('Failed to fetch associated bundles', error);
+            }
+        } else {
+            // If making it Available, just do it
+            try {
+                await itemService.updateStatus(row.itemId, 'Available');
+                fetchItems();
+            } catch (error) {
+                console.error('Failed to update status', error);
+            }
+        }
+    };
+
+    const handleConfirmToggleStatus = async () => {
         try {
-            const newStatus = row.status === 'Available' ? 'Unavailable' : 'Available';
-            await itemService.updateStatus(row.itemId, newStatus);
+            await itemService.updateStatus(currentItem.itemId, 'Unavailable');
+            setOpenStatusModal(false);
             fetchItems();
         } catch (error) {
             console.error('Failed to update status', error);
         }
     };
 
-    const handleDelete = (item) => {
-        setCurrentItem(item);
-        setFormData(item);
-        setOpenDeleteModal(true);
+    const handleDelete = async (item) => {
+        try {
+            const res = await itemService.getAssociatedBundles(item.itemId);
+            setAssociatedBundles(res.data);
+            setCurrentItem(item);
+            setFormData(item);
+            setOpenDeleteModal(true);
+        } catch (error) {
+            console.error('Failed to fetch associated bundles', error);
+        }
     };
 
     const handleConfirmDelete = async () => {
@@ -229,31 +259,6 @@ const ItemsPage = () => {
                     onClick={() => handleToggleStatus(row)}
                     sx={{ cursor: 'pointer' }}
                 />
-            )
-        },
-        {
-            id: 'actions',
-            label: 'Actions',
-            width: 120,
-            align: 'center',
-            render: (row) => (
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
-                    <Tooltip title="Detail">
-                        <IconButton size="small" onClick={() => handleDetail(row)}>
-                            <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Edit">
-                        <IconButton size="small" color="primary" onClick={() => handleEdit(row)}>
-                            <EditIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                        <IconButton size="small" color="error" onClick={() => handleDelete(row)}>
-                            <DeleteIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                </Box>
             )
         }
     ];
@@ -321,13 +326,21 @@ const ItemsPage = () => {
                 <Button
                     variant="outlined"
                     size="small"
-                    onClick={() => setFilters({ Search: '', ItemType: '', Status: '' })}
+                    onClick={() => setFilters({ Search: '', ItemType: '', Status: 'Available' })}
                 >
                     Clear Filters
                 </Button>
             </Box>
 
-            <DataTable columns={columns} data={items} hideSearch />
+            <DataTable 
+                columns={columns} 
+                data={items} 
+                onView={handleDetail}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                viewLabel="Detail"
+                hideSearch 
+            />
 
             {/* CREATE / EDIT */}
             <Dialog open={openModal} onClose={() => setOpenModal(false)}>
@@ -416,6 +429,22 @@ const ItemsPage = () => {
                         Are you sure you want to delete this item? This action cannot be undone.
                     </Typography>
 
+                    {(associatedBundles.skinAndCharacterBundles.length > 0 || associatedBundles.gemBundles.length > 0) && (
+                        <Box sx={{ mb: 3, p: 2, bgcolor: 'error.light', borderRadius: 1, color: 'error.contrastText' }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                WARNING: Deleting this item will also disable the following bundles:
+                            </Typography>
+                            <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                                {associatedBundles.skinAndCharacterBundles.map(b => (
+                                    <li key={`skin-${b.skinAndCharacterBundleId}`}>{b.bundleName} (Skin/Character)</li>
+                                ))}
+                                {associatedBundles.gemBundles.map(b => (
+                                    <li key={`gem-${b.gemBundleId}`}>{b.bundleName} (Gem)</li>
+                                ))}
+                            </ul>
+                        </Box>
+                    )}
+
                     <TextField
                         fullWidth margin="dense"
                         label="Name"
@@ -456,6 +485,36 @@ const ItemsPage = () => {
                 <DialogActions>
                     <Button onClick={() => setOpenDeleteModal(false)}>Cancel</Button>
                     <Button onClick={handleConfirmDelete} color="error" variant="contained">Delete</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* STATUS TOGGLE CONFIRMATION */}
+            <Dialog open={openStatusModal} onClose={() => setOpenStatusModal(false)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ color: 'warning.main' }}>Disable Item</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1" sx={{ mb: 2 }}>
+                        Are you sure you want to disable <strong>{currentItem?.itemName}</strong>?
+                    </Typography>
+
+                    {(associatedBundles.skinAndCharacterBundles.length > 0 || associatedBundles.gemBundles.length > 0) && (
+                        <Box sx={{ mb: 3, p: 2, bgcolor: 'warning.light', borderRadius: 1, color: 'warning.contrastText' }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                Disabling this item will also disable the following bundles:
+                            </Typography>
+                            <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                                {associatedBundles.skinAndCharacterBundles.map(b => (
+                                    <li key={`skin-status-${b.skinAndCharacterBundleId}`}>{b.bundleName} (Skin/Character)</li>
+                                ))}
+                                {associatedBundles.gemBundles.map(b => (
+                                    <li key={`gem-status-${b.gemBundleId}`}>{b.bundleName} (Gem)</li>
+                                ))}
+                            </ul>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenStatusModal(false)}>Cancel</Button>
+                    <Button onClick={handleConfirmToggleStatus} color="warning" variant="contained">Disable Everything</Button>
                 </DialogActions>
             </Dialog>
 

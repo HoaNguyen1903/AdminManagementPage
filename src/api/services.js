@@ -53,6 +53,7 @@ export const feedbackService = {
 export const itemService = {
   getAll: (params) => api.get('/Item', { params }),
   getById: (id) => api.get(`/Item/${id}`),
+  getAssociatedBundles: (id) => api.get(`/Item/${id}/associated-bundles`),
   create: (data) => api.post('/Item', data),
   update: (id, data) => api.put(`/Item/${id}`, data),
   updateStatus: (id, status) => api.patch(`/Item/${id}/status`, null, { params: { status } }),
