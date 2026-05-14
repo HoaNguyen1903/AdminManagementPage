@@ -3,24 +3,36 @@
   "WorkspaceRootPath": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\.env.production||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.env.production||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\.env.development||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.env.development||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\pages\\ShopPage.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\ShopPage.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\.env.example||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:.env.example||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\api\\axiosConfig.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\api\\axiosConfig.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\api\\services.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\api\\services.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\pages\\ShopPage.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\ShopPage.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\pages\\OrdersPage.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\OrdersPage.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\pages\\ItemsPage.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\pages\\ItemsPage.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\api\\services.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\api\\services.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -62,24 +74,60 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": ".env.example",
+              "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\.env.example",
+              "RelativeDocumentMoniker": ".env.example",
+              "ToolTip": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\.env.example",
+              "RelativeToolTip": ".env.example",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-05-07T06:02:15.04Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
+              "Title": ".env.production",
+              "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\.env.production",
+              "RelativeDocumentMoniker": ".env.production",
+              "ToolTip": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\.env.production",
+              "RelativeToolTip": ".env.production",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-05-07T06:01:39.984Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ItemsPage.jsx",
+              "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\pages\\ItemsPage.jsx",
+              "RelativeDocumentMoniker": "src\\pages\\ItemsPage.jsx",
+              "ToolTip": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\pages\\ItemsPage.jsx",
+              "RelativeToolTip": "src\\pages\\ItemsPage.jsx",
+              "ViewState": "AgIAALQAAAAAAAAAAAApwMgAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2026-05-05T19:48:15.922Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": ".env.development",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\.env.development",
               "RelativeDocumentMoniker": ".env.development",
               "ToolTip": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\.env.development",
               "RelativeToolTip": ".env.development",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAA0AAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAABDAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-05-05T14:33:06.719Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-05T14:33:06.719Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 7,
               "Title": "services.js",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\api\\services.js",
               "RelativeDocumentMoniker": "src\\api\\services.js",
@@ -87,51 +135,47 @@
               "RelativeToolTip": "src\\api\\services.js",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-05-05T13:25:32.628Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-05T13:25:32.628Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "axiosConfig.js",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\api\\axiosConfig.js",
               "RelativeDocumentMoniker": "src\\api\\axiosConfig.js",
               "ToolTip": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\api\\axiosConfig.js",
               "RelativeToolTip": "src\\api\\axiosConfig.js",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAAABAAAAAwAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2026-05-05T12:29:33.864Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-05T12:29:33.864Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "ShopPage.jsx",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\pages\\ShopPage.jsx",
               "RelativeDocumentMoniker": "src\\pages\\ShopPage.jsx",
               "ToolTip": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\pages\\ShopPage.jsx",
               "RelativeToolTip": "src\\pages\\ShopPage.jsx",
-              "ViewState": "AgIAABcBAAAAAAAAAAApwCMBAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAANwBAAAAAAAAAAAgwOUBAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
-              "WhenOpened": "2026-05-05T04:34:20.212Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-05T04:34:20.212Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "OrdersPage.jsx",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\pages\\OrdersPage.jsx",
               "RelativeDocumentMoniker": "src\\pages\\OrdersPage.jsx",
               "ToolTip": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\pages\\OrdersPage.jsx",
               "RelativeToolTip": "src\\pages\\OrdersPage.jsx",
-              "ViewState": "AgIAAIoAAAAAAAAAAAAAAIoAAAAXAAAAAAAAAA==",
+              "ViewState": "AgIAADcAAAAAAAAAAAAAAEYAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
-              "WhenOpened": "2026-05-05T04:36:56.073Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-05T04:36:56.073Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 9,
               "Title": "index.html",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\vendor\\sneat\\index.html",
               "RelativeDocumentMoniker": "src\\vendor\\sneat\\index.html",
@@ -143,7 +187,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 8,
               "Title": "index.html",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\index.html",
               "RelativeDocumentMoniker": "index.html",
@@ -155,7 +199,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 11,
               "Title": "main.jsx",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\main.jsx",
               "RelativeDocumentMoniker": "src\\main.jsx",
@@ -167,7 +211,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 12,
               "Title": "App.jsx",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\App.jsx",
               "RelativeDocumentMoniker": "src\\App.jsx",
@@ -179,7 +223,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 13,
               "Title": "index.css",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\index.css",
               "RelativeDocumentMoniker": "src\\index.css",
@@ -191,7 +235,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 14,
               "Title": "azure-static-web-apps-ashy-pebble-025275f00.yml",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\.github\\workflows\\azure-static-web-apps-ashy-pebble-025275f00.yml",
               "RelativeDocumentMoniker": ".github\\workflows\\azure-static-web-apps-ashy-pebble-025275f00.yml",
@@ -203,7 +247,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 15,
               "Title": "package.json",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\package.json",
               "RelativeDocumentMoniker": "package.json",
@@ -215,7 +259,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 10,
               "Title": "HomePage.jsx",
               "DocumentMoniker": "C:\\Users\\ASUS\\Documents\\GitHub\\AdminManagementPage\\src\\pages\\HomePage.jsx",
               "RelativeDocumentMoniker": "src\\pages\\HomePage.jsx",

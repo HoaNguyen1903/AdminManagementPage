@@ -89,6 +89,12 @@ export const orderService = {
   cancelPayment: (orderId, cancellationReason) => api.post(`/Order/${orderId}/cancel`, null, { params: { cancellationReason } }),
 };
 
+// Purchase Orders (In-game)
+export const purchaseOrderService = {
+    getAll: (params) => api.get('/PurchaseOrder', { params }),
+    getById: (id) => api.get(`/PurchaseOrder/${id}`),
+};
+
 // Users
 export const userService = {
   getAll: (params) => api.get('/User', { params }),
